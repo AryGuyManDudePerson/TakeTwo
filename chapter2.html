@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>CHAPTER 02</title>
+    <style>
+    :root { 
+        --bg: #0e0e0e; 
+        --page-bg: #151515; 
+        --white-raw: 255, 255, 255; 
+    }
+    
+    body { 
+        font-family: 'Segoe UI', sans-serif; 
+        background-color: var(--bg); 
+        margin: 0;
+        display: flex; 
+        flex-direction: column; 
+        align-items: center; 
+        min-height: 100vh;
+        transform: scale(0.8); 
+        transform-origin: top center; 
+        width: 125%; 
+        left: -12.5%; 
+        position: relative;
+    }
+
+    .book-spread {
+        display: grid; 
+        grid-template-columns: 1fr 1fr; 
+        width: 1200px; 
+        height: 850px;
+        background: var(--page-bg); 
+        border: 1px solid #222; 
+        box-shadow: 15px 15px 0px #000;
+        position: relative; 
+        margin-top: 50px;
+    }
+
+    .book-spread::before { 
+        content: ""; 
+        position: absolute; 
+        left: 50%; top: 0; bottom: 0; 
+        width: 1px; 
+        background: #222; 
+        transform: translateX(-50%); 
+        z-index: 5; 
+    }
+
+    .page { 
+        padding: 60px 80px; 
+        position: relative; 
+        overflow: hidden; 
+        display: flex; 
+        flex-direction: column; 
+        height: 100%; /* Ensures centering works */
+    }
+
+    /* --- NARRATIVE STYLE --- */
+    .content p {
+        font-size: 1.15rem; 
+        font-weight: 400; 
+        line-height: 1.6;
+        margin-bottom: 20px;
+        color: rgba(var(--white-raw), 0.75);
+    }
+
+    /* --- DIALOGUE STYLE --- */
+    .d {
+        display: flex !important;
+        align-items: flex-start; /* Better for multi-line dialogue */
+        color: rgba(var(--white-raw), 1.0);
+        margin: 10px 0 20px 0;
+        padding: 8px 12px;
+        background: rgba(255,255,255,0.05);
+        border-radius: 4px;
+        font-size: 1.15rem;
+        font-weight: 400;
+    }
+
+    /* Vertical bar ONLY for dialogue */
+    .d::before {
+        content: "";
+        display: inline-block;
+        min-width: 3px;
+        height: 1.2rem; 
+        background: rgba(var(--white-raw), 0.4);
+        margin-right: 12px;
+        margin-top: 4px;
+        border-radius: 2px;
+    }
+
+    /* --- THE SCREAM (HUGE TEXT) --- */
+.s {
+    /* [1] KILL THE INHERITED DIALOGUE BAR */
+    display: block !important; 
+    background: transparent !important; 
+    padding: 0 !important;
+    border: none !important;
+    
+    /* [2] TEXT SPECS */
+    font-size: 4.5rem !important; 
+    font-weight: 900 !important;
+    color: rgba(var(--white-raw), 1.0) !important;
+    line-height: 1;
+    text-align: center;
+    margin: auto 0 !important; 
+    word-break: break-all; 
+    letter-spacing: -2px;
+    text-decoration: none !important; /* Forces no literal strikethrough */
+}
+
+/* [3] HARD DELETE THE VERTICAL BAR FOR SCREAMS */
+.s::before {
+    content: none !important;
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    margin: 0 !important;
+}
+
+    .nav-zone { position: absolute; top: 0; bottom: 0; width: 50%; z-index: 10; cursor: pointer; }
+    .left-zone { left: 0; } .right-zone { right: 0; }
+    .no-padding { padding: 0 !important; }
+    .no-padding .content img { width: 100%; height: 850px; object-fit: cover; display: block; }
+
+    .footer-nav { margin: 80px 0 120px 0; width: 100%; display: flex; justify-content: center; }
+    .menu-btn { 
+        text-decoration: none; 
+        color: rgba(var(--white-raw), 0.5); 
+        padding: 12px 30px; 
+        font-size: 0.85rem; 
+        border: 1px solid #333; 
+        transition: 0.2s;
+    }
+    .menu-btn:hover {
+        color: rgba(var(--white-raw), 1.0);
+        border-color: #555;
+    }
+</style>
+</head>
+<body>
+
+<script>
+    /* STORY INPUT */
+    const MY_STORY = [
+        "<img src='image/02/01.jpg'>",
+    ];
+</script>
+
+    <main class="book-spread">
+        <div class="nav-zone left-zone" onclick="prevPage()"></div>
+        <div class="nav-zone right-zone" onclick="nextPage()"></div>
+        <article class="page" id="L-PAGE"><div class="content" id="L-C"></div></article>
+        <article class="page" id="R-PAGE"><div class="content" id="R-C"></div></article>
+    </main>
+
+    <footer class="footer-nav"><a href="index.html" class="menu-btn">RETURN</a></footer>
+
+<script>
+    /* ENGINE */
+    let currentSpread = 0;
+    function updatePages() {
+        const lC = document.getElementById('L-C'), rC = document.getElementById('R-C');
+        const lP = document.getElementById('L-PAGE'), rP = document.getElementById('R-PAGE');
+        const lData = MY_STORY[currentSpread * 2] || "";
+        const rData = MY_STORY[(currentSpread * 2) + 1] || "";
+        lC.innerHTML = lData; rC.innerHTML = rData;
+        lData.includes('<img') ? lP.classList.add('no-padding') : lP.classList.remove('no-padding');
+        rData.includes('<img') ? rP.classList.add('no-padding') : rP.classList.remove('no-padding');
+        window.scrollTo(0, 0); 
+    }
+    function nextPage() { if ((currentSpread + 1) * 2 < MY_STORY.length) { currentSpread++; updatePages(); } }
+    function prevPage() { if (currentSpread > 0) { currentSpread--; updatePages(); } }
+    updatePages();
+</script>
+</body>
+</html>

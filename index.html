@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>INDIVIDUALS: TAKE TWO</title>
+    <style>
+        :root {
+            --bg: #121212;
+            --card-bg: #1a1a1a;
+            --border: #ffffff;
+            --accent-orange: #ff6b00;
+            --accent-red: #ff0000;
+            --accent-yellow: #ffd500;
+            --accent-pink: #ff007f;
+            --text-dim: #888;
+        }
+
+        body { 
+            font-family: 'Arial Black', sans-serif; 
+            background-color: var(--bg); 
+            color: #fff; 
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start; /* Moves everything to the left */
+            padding: 60px 10%;
+            margin: 0;
+            text-transform: uppercase;
+        }
+
+        /* Compact Left-Aligned Title */
+        .title-card {
+            border-left: 10px solid var(--border);
+            padding: 10px 20px;
+            margin-bottom: 20px;
+        }
+
+        .title-card h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            letter-spacing: -1px;
+        }
+
+        /* Smaller, Less Prominent Synopsis */
+        .story-box {
+            max-width: 400px;
+            font-size: 0.75rem; /* Shrunk font */
+            line-height: 1.4;
+            color: var(--text-dim); /* Dimmed color */
+            margin-bottom: 40px;
+            padding-left: 20px;
+            border-left: 2px solid #333;
+        }
+
+        /* Chapter Menu */
+        .menu-list { 
+            list-style: none; 
+            padding: 0; 
+            width: 100%;
+            max-width: 450px;
+        }
+
+        .menu-item { 
+            margin-bottom: 12px;
+        }
+
+        .chapter-btn { 
+            text-decoration: none; 
+            color: #fff; 
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            background: var(--card-bg);
+            border: 2px solid #333; /* Darker border by default */
+            transition: 0.1s;
+        }
+
+        /* Icon Blocks */
+        .icon {
+            width: 14px;
+            height: 14px;
+            margin-right: 15px;
+        }
+
+        /* Hover States */
+        .chapter-btn:hover { 
+            transform: translateX(10px); /* Slips to the right on hover */
+            background: #222;
+        }
+
+        /* Color Assignments */
+        .ch-orange .icon { background: var(--accent-orange); }
+        .ch-red .icon { background: var(--accent-red); }
+        .ch-yellow .icon { background: var(--accent-yellow); }
+        .ch-pink .icon { background: var(--accent-pink); }
+        
+        /* Hover Borders */
+        .ch-orange:hover { border-color: var(--accent-orange); color: var(--accent-orange); }
+        .ch-red:hover { border-color: var(--accent-red); color: var(--accent-red); }
+        .ch-yellow:hover { border-color: var(--accent-yellow); color: var(--accent-yellow); }
+        .ch-pink:hover { border-color: var(--accent-pink); color: var(--accent-pink); }
+
+        .footer {
+            margin-top: 60px;
+            font-size: 0.7rem;
+            color: #333;
+            letter-spacing: 2px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="title-card">
+        <h1>THE INDIVIDUALS: TAKE TWO</h1>
+    </div>
+
+    <div class="story-box">
+        Amidst all this armageddon slop, a group of people attempt to navigate through the violence of this rapidly self-consuming world. Hence we have The Individuals™
+    </div>
+
+    <ul class="menu-list">
+        <li>
+            <a href="chapter1.html" class="chapter-btn ch-orange">
+                <div class="icon"></div>
+                <span>CHAPTER 1: ANDY</span>
+            </a>
+        </li>
+    </ul>
+
+</body>
+</html>
