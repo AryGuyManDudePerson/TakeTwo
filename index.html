@@ -9,26 +9,70 @@
             --bg: #121212;
             --card-bg: #1a1a1a;
             --border: #ffffff;
-            --accent-orange: #ff6b00;
-            --accent-red: #ff0000;
-            --accent-yellow: #ffd500;
-            --accent-pink: #ff007f;
+            --text: #ffffff;
             --text-dim: #888;
+            --btn-border: #222;
+            --accent-yellow: #ffde59;
+            --accent-orange: #ff6b00;
+            --accent-red:    #ff3131;
+            --accent-purple: #bc13fe;
+            --accent-pink:   #ff66c4;
+            --accent-blue:   #00c2ff;
+            --accent-green:  #00ff9d; /* Electric Mint/Green */
+            --accent-white:  #ffffff;
+
+        }
+
+        body.light-theme {
+            --bg: #f4f4f4;
+            --card-bg: #ffffff;
+            --border: #000000;
+            --text: #000000;
+            --text-dim: #555;
+            --btn-border: #ccc;
         }
 
         body { 
             font-family: 'Arial Black', sans-serif; 
             background-color: var(--bg); 
-            color: #fff; 
+            color: var(--text); 
             display: flex;
             flex-direction: column;
-            align-items: flex-start; /* Moves everything to the left */
+            align-items: flex-start; 
             padding: 60px 10%;
             margin: 0;
             text-transform: uppercase;
+            transition: background 0.3s, color 0.3s;
         }
 
-        /* Compact Left-Aligned Title */
+        .controls {
+            position: absolute;
+            top: 40px;
+            right: 10%;
+            display: flex;
+            gap: 10px;
+            z-index: 100;
+        }
+
+        .ctrl-btn {
+            text-decoration: none;
+            color: var(--text-dim);
+            font-size: 0.7rem;
+            letter-spacing: 2px;
+            border: 1px solid var(--btn-border);
+            padding: 8px 15px;
+            transition: 0.3s;
+            background: var(--card-bg);
+            cursor: pointer;
+            font-family: 'Arial Black', sans-serif;
+            text-transform: uppercase;
+        }
+
+        .ctrl-btn:hover {
+            color: var(--text);
+            border-color: var(--text);
+        }
+
         .title-card {
             border-left: 10px solid var(--border);
             padding: 10px 20px;
@@ -41,74 +85,59 @@
             letter-spacing: -1px;
         }
 
-        /* Smaller, Less Prominent Synopsis */
         .story-box {
             max-width: 400px;
-            font-size: 0.75rem; /* Shrunk font */
+            font-size: 0.75rem; 
             line-height: 1.4;
-            color: var(--text-dim); /* Dimmed color */
+            color: var(--text-dim); 
             margin-bottom: 40px;
             padding-left: 20px;
-            border-left: 2px solid #333;
+            border-left: 2px solid var(--btn-border);
         }
 
-        /* Chapter Menu */
-        .menu-list { 
-            list-style: none; 
-            padding: 0; 
-            width: 100%;
-            max-width: 450px;
-        }
-
-        .menu-item { 
-            margin-bottom: 12px;
-        }
-
+        .menu-list { list-style: none; padding: 0; width: 100%; max-width: 450px; }
+        
         .chapter-btn { 
             text-decoration: none; 
-            color: #fff; 
+            color: var(--text); 
             display: flex;
             align-items: center;
             padding: 12px 20px;
             background: var(--card-bg);
-            border: 2px solid #333; /* Darker border by default */
+            border: 2px solid var(--btn-border); 
             transition: 0.1s;
         }
 
-        /* Icon Blocks */
-        .icon {
-            width: 14px;
-            height: 14px;
-            margin-right: 15px;
-        }
+.icon { 
+    width: 14px; 
+    height: 14px; 
+    margin-right: 15px; 
+    background: var(--ch-color, var(--text));
+}
 
-        /* Hover States */
-        .chapter-btn:hover { 
-            transform: translateX(10px); /* Slips to the right on hover */
-            background: #222;
-        }
+.chapter-btn:hover { 
+    transform: translateX(10px); 
+    border-color: var(--ch-color);
+    color: var(--ch-color);
+}
 
-        /* Color Assignments */
-        .ch-orange .icon { background: var(--accent-orange); }
-        .ch-red .icon { background: var(--accent-red); }
-        .ch-yellow .icon { background: var(--accent-yellow); }
-        .ch-pink .icon { background: var(--accent-pink); }
-        
-        /* Hover Borders */
-        .ch-orange:hover { border-color: var(--accent-orange); color: var(--accent-orange); }
-        .ch-red:hover { border-color: var(--accent-red); color: var(--accent-red); }
-        .ch-yellow:hover { border-color: var(--accent-yellow); color: var(--accent-yellow); }
-        .ch-pink:hover { border-color: var(--accent-pink); color: var(--accent-pink); }
+.ch-orange { --ch-color: var(--accent-orange); }
+.ch-red    { --ch-color: var(--accent-red); }
+.ch-yellow { --ch-color: var(--accent-yellow); }
+.ch-pink   { --ch-color: var(--accent-pink); }
+.ch-blue   { --ch-color: var(--accent-blue); }
+.ch-white  { --ch-color: var(--accent-white); }
+.ch-purple { --ch-color: var(--accent-purple); }
+.ch-mint   { --ch-color: var(--accent-mint); }
 
-        .footer {
-            margin-top: 60px;
-            font-size: 0.7rem;
-            color: #333;
-            letter-spacing: 2px;
-        }
     </style>
 </head>
 <body>
+
+    <div class="controls">
+        <button class="ctrl-btn" id="themeToggle" onclick="toggleTheme()">DARK</button>
+        <a href="settings.html" class="ctrl-btn">SETTINGS</a>
+    </div>
 
     <div class="title-card">
         <h1>THE INDIVIDUALS: TAKE TWO</h1>
@@ -125,7 +154,40 @@
                 <span>CHAPTER 1: ANDY</span>
             </a>
         </li>
+        <li>
+          <a href="chapter2.html" class="chapter-btn ch-red">
+                <div class="icon"></div>
+                <span>CHAPTER 2: HAPPY BIRTHDAY</span>
+            </a>
+        </li>
     </ul>
+
+    <script>
+        function toggleTheme() {
+            const body = document.body;
+            const btn = document.getElementById('themeToggle');
+            
+            // ts toggle
+            body.classList.toggle('light-theme');
+            
+            // so tis we check what theme we is currenlty in
+            const isLight = body.classList.contains('light-theme');
+            
+            btn.innerText = isLight ? "LIGHT" : "DARK";
+            
+            // tis for save so it remembers
+            localStorage.setItem('site-theme', isLight ? 'light' : 'dark');
+        }
+
+        window.onload = () => {
+            const savedTheme = localStorage.getItem('site-theme');
+            if (savedTheme === 'light') {
+                document.body.classList.add('light-theme');
+                document.getElementById('themeToggle').innerText = "LIGHT";
+            }
+        };
+        // what yall know bout female counterpart
+    </script>
 
 </body>
 </html>

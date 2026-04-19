@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SETTINGS</title>
+    <style>
+        :root {
+            --bg: #121212;
+            --card-bg: #1a1a1a;
+            --text: #ffffff;
+            --accent: #ff6b00;
+        }
+
+        body.light-theme {
+            --bg: #f4f4f4;
+            --card-bg: #ffffff;
+            --text: #000000;
+        }
+
+        body { 
+            font-family: 'Arial Black', sans-serif; 
+            background-color: var(--bg); 
+            color: var(--text); 
+            padding: 60px 10%;
+            text-transform: uppercase;
+        }
+
+        .header { border-left: 10px solid var(--text); padding-left: 20px; margin-bottom: 40px; }
+        
+        .setting-item {
+            background: var(--card-bg);
+            border: 2px solid #333;
+            padding: 20px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 500px;
+            position: relative;
+            transition: border-color 0.2s;
+        }
+
+        .setting-item:hover {
+            border-color: #444;
+        }
+
+        .setting-label {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .hint {
+            font-family: 'Segoe UI', sans-serif;
+            font-size: 10px;
+            color: var(--accent);
+            letter-spacing: 0.5px;
+            text-transform: none;
+            opacity: 0;
+            transform: translateY(-3px);
+            transition: 0.25s ease-out;
+            pointer-events: none;
+            max-width: 320px;
+            line-height: 1.3;
+        }
+
+        .setting-item:hover .hint {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+            flex-shrink: 0;
+        }
+
+        .switch input { opacity: 0; width: 0; height: 0; }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #333;
+            transition: .4s;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px; width: 16px;
+            left: 4px; bottom: 4px;
+            background-color: white;
+            transition: .4s;
+        }
+
+        input:checked + .slider { background-color: var(--accent); }
+        input:checked + .slider:before { transform: translateX(26px); }
+
+        .back-btn {
+            display: inline-block;
+            margin-top: 20px;
+            text-decoration: none;
+            color: var(--text);
+            border: 1px solid #333;
+            padding: 10px 20px;
+            font-size: 0.8rem;
+            transition: 0.3s;
+        }
+        .back-btn:hover { background: var(--accent); border-color: var(--accent); color: #fff; }
+    </style>
+</head>
+<body>
+
+    <div class="header"><h1>SETTINGS</h1></div>
+
+    <div class="setting-item">
+        <div class="setting-label">
+            <span>Spoiler Protection</span>
+            <span class="hint">Blurs images to prevent immediate spoilers in case these images are fucking the hype up before you could even read.</span>
+        </div>
+        
+        <label class="switch">
+            <input type="checkbox" id="spoilerToggle" onchange="saveSettings()">
+            <span class="slider"></span>
+        </label>
+    </div>
+
+    <a href="index.html" class="back-btn">BACK TO MENU</a>
+
+    <script>
+        function saveSettings() {
+            const isChecked = document.getElementById('spoilerToggle').checked;
+            localStorage.setItem('spoiler-mode', isChecked);
+        }
+
+        window.onload = () => {
+            if (localStorage.getItem('site-theme') === 'light') document.body.classList.add('light-theme');
+            
+            // spoiler alerte momentesums
+            const spoilerMode = localStorage.getItem('spoiler-mode') === 'true';
+            document.getElementById('spoilerToggle').checked = spoilerMode;
+        };
+    </script>
+</body>
+</html>

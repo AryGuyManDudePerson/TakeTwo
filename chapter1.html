@@ -2,12 +2,30 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CHAPTER 01</title>
     <style>
     :root { 
         --bg: #0e0e0e; 
         --page-bg: #151515; 
-        --white-raw: 255, 255, 255; 
+        --white-raw: 255, 255, 255;
+        --spread-ratio: 1.33; 
+        --panel-bg: rgba(20, 20, 20, 0.9);
+        --border-color: #333;
+        --border-light: #222;
+        --input-bg: #000;
+        --text-main: #fff;
+    }
+
+    body.light-theme {
+        --bg: #e5e5e5; 
+        --page-bg: #ffffff; 
+        --white-raw: 0, 0, 0;
+        --panel-bg: rgba(255, 255, 255, 0.9);
+        --border-color: #ccc;
+        --border-light: #ddd;
+        --input-bg: #fff;
+        --text-main: #000;
     }
     
     body { 
@@ -18,23 +36,69 @@
         flex-direction: column; 
         align-items: center; 
         min-height: 100vh;
-        transform: scale(0.8); 
-        transform-origin: top center; 
-        width: 125%; 
-        left: -12.5%; 
-        position: relative;
+        color: var(--text-main);
     }
+
+    .spoiler-active img {
+        filter: blur(50px) grayscale(1);
+        transition: none !important;
+    }
+
+    .revealed img {
+        filter: blur(0) grayscale(0) !important;
+        transition: none !important;
+    }
+
+    .spoiler-active:not(.revealed)::after {
+        content: "SPOILER: CLICK TO REVEAL";
+        position: absolute;
+        top: 50%; left: 50%;
+        transform: translate(-50%, -50%);
+        background: rgba(0,0,0,0.8);
+        color: white;
+        padding: 10px 15px;
+        font-size: 10px;
+        letter-spacing: 2px;
+        z-index: 20;
+        pointer-events: none;
+        border: 1px solid #444;
+        text-transform: uppercase;
+        font-family: 'Arial Black', sans-serif;
+    }
+
+    .settings-panel {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 100;
+        background: var(--panel-bg);
+        padding: 12px;
+        border: 1px solid var(--border-color);
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        font-size: 10px;
+        text-transform: uppercase;
+    }
+    
+    select {
+        background: var(--input-bg);
+        color: var(--text-main);
+        border: 1px solid var(--border-color);
+        padding: 5px;
+    }
+
+    .book-container { width: 90%; max-width: 1400px; margin: 40px 0; }
 
     .book-spread {
         display: grid; 
         grid-template-columns: 1fr 1fr; 
-        width: 1200px; 
-        height: 850px;
+        width: 100%;
+        aspect-ratio: var(--spread-ratio); 
         background: var(--page-bg); 
-        border: 1px solid #222; 
-        box-shadow: 15px 15px 0px #000;
+        border: 1px solid var(--border-light); 
         position: relative; 
-        margin-top: 50px;
+        overflow: hidden;
     }
 
     .book-spread::before { 
@@ -42,109 +106,76 @@
         position: absolute; 
         left: 50%; top: 0; bottom: 0; 
         width: 1px; 
-        background: #222; 
-        transform: translateX(-50%); 
+        background: var(--border-light);
         z-index: 5; 
     }
 
     .page { 
-        padding: 60px 80px; 
         position: relative; 
-        overflow: hidden; 
         display: flex; 
         flex-direction: column; 
-        height: 100%; /* Ensures centering works */
+        height: 100%;
+        padding: 60px 80px; 
+        box-sizing: border-box;
+        overflow: hidden;
     }
 
-    /* --- NARRATIVE STYLE --- */
-    .content p {
-        font-size: 1.15rem; 
-        font-weight: 400; 
-        line-height: 1.6;
-        margin-bottom: 20px;
-        color: rgba(var(--white-raw), 0.75);
-    }
+    .content { width: 100%; height: 100%; }
+    .content p { font-size: 1.1rem; line-height: 1.6; margin-bottom: 20px; color: rgba(var(--white-raw), 0.7); }
+    .d { display: flex !important; background: rgba(var(--white-raw), 0.05); padding: 10px; border-radius: 4px; margin-bottom: 20px;}
+    .d::before { content: ""; min-width: 3px; height: 1.2rem; background: rgba(var(--white-raw), 0.4); margin-right: 12px; }
 
-    /* --- DIALOGUE STYLE --- */
-    .d {
-        display: flex !important;
-        align-items: flex-start; /* Better for multi-line dialogue */
-        color: rgba(var(--white-raw), 1.0);
-        margin: 10px 0 20px 0;
-        padding: 8px 12px;
-        background: rgba(255,255,255,0.05);
-        border-radius: 4px;
-        font-size: 1.15rem;
-        font-weight: 400;
-    }
+    .no-padding { padding: 0 !important; }
+    .no-padding img { width: 100%; height: 100%; display: block; object-fit: fill; }
 
-    /* Vertical bar ONLY for dialogue */
-    .d::before {
-        content: "";
-        display: inline-block;
-        min-width: 3px;
-        height: 1.2rem; 
-        background: rgba(var(--white-raw), 0.4);
-        margin-right: 12px;
-        margin-top: 4px;
-        border-radius: 2px;
-    }
-
-    /* --- THE SCREAM (HUGE TEXT) --- */
-.s {
-    /* [1] KILL THE INHERITED DIALOGUE BAR */
-    display: block !important; 
-    background: transparent !important; 
-    padding: 0 !important;
-    border: none !important;
-    
-    /* [2] TEXT SPECS */
-    font-size: 4.5rem !important; 
-    font-weight: 900 !important;
-    color: rgba(var(--white-raw), 1.0) !important;
-    line-height: 1;
-    text-align: center;
-    margin: auto 0 !important; 
-    word-break: break-all; 
-    letter-spacing: -2px;
-    text-decoration: none !important; /* Forces no literal strikethrough */
-}
-
-/* [3] HARD DELETE THE VERTICAL BAR FOR SCREAMS */
-.s::before {
-    content: none !important;
-    display: none !important;
-    width: 0 !important;
-    height: 0 !important;
-    margin: 0 !important;
-}
+    [data-ratio="1.77"] .no-padding { background: #ffffff !important; }
+    [data-ratio="1.77"] .no-padding .content { display: flex; justify-content: center; align-items: center; }
+    [data-ratio="1.77"] .no-padding img { object-fit: contain; }
 
     .nav-zone { position: absolute; top: 0; bottom: 0; width: 50%; z-index: 10; cursor: pointer; }
     .left-zone { left: 0; } .right-zone { right: 0; }
-    .no-padding { padding: 0 !important; }
-    .no-padding .content img { width: 100%; height: 850px; object-fit: cover; display: block; }
-
-    .footer-nav { margin: 80px 0 120px 0; width: 100%; display: flex; justify-content: center; }
-    .menu-btn { 
+    /*Andy Wan more like... Poopy Wan...*/
+    .footer-nav { margin: 20px 0 60px 0; z-index: 10; }
+    .return-btn { 
         text-decoration: none; 
-        color: rgba(var(--white-raw), 0.5); 
-        padding: 12px 30px; 
-        font-size: 0.85rem; 
-        border: 1px solid #333; 
-        transition: 0.2s;
-    }
-    .menu-btn:hover {
-        color: rgba(var(--white-raw), 1.0);
-        border-color: #555;
+        color: rgba(var(--white-raw), 0.4); 
+        font-size: 12px; 
+        letter-spacing: 2px;
+        padding: 10px 20px;
+        border: 1px solid var(--border-color);
     }
 </style>
 </head>
-<body>
+    
+<body data-ratio="1.33">
+
+    <div class="settings-panel">
+        <span>SPREAD RATIO:</span>
+        <select id="ratioSelect" onchange="updateRatio(this.value)">
+            <option value="1.33">4:3</option>
+            <option value="1.5">3:2</option>
+            <option value="1.25">5:4</option>
+            <option value="1.77">16:9 (Letterboxed)</option>
+        </select>
+    </div>
+
+    <div class="book-container">
+        <main class="book-spread">
+            <div class="nav-zone left-zone" onclick="prevPage()"></div>
+            <div class="nav-zone right-zone" onclick="nextPage()"></div>
+            <article class="page" id="L-PAGE"><div class="content" id="L-C"></div></article>
+            <article class="page" id="R-PAGE"><div class="content" id="R-C"></div></article>
+        </main>
+    </div>
+
+    <footer class="footer-nav">
+        <a href="index.html" class="return-btn">RETURN</a>
+    </footer>
 
 <script>
-    /* STORY INPUT */
-    const MY_STORY = [
-        "<img src='image/01/1.jpg'>",
+    // hey i put story here dood, ok
+    const MY_STORY = [ 
+         "<img src='image/01/1.jpg'>",
         "<img src='image/01/2.jpg'>",
         "<img src='image/01/3.jpg'>",
         "<img src='image/01/4.jpg'>",
@@ -168,34 +199,77 @@
         "<img src='image/01/12.jpg'>",
         "<img src='image/01/white.jpg'>",
         "<img src='image/01/thanks.jpg'>"
-    ];
-</script>
-
-    <main class="book-spread">
-        <div class="nav-zone left-zone" onclick="prevPage()"></div>
-        <div class="nav-zone right-zone" onclick="nextPage()"></div>
-        <article class="page" id="L-PAGE"><div class="content" id="L-C"></div></article>
-        <article class="page" id="R-PAGE"><div class="content" id="R-C"></div></article>
-    </main>
-
-    <footer class="footer-nav"><a href="index.html" class="menu-btn">RETURN</a></footer>
-
-<script>
-    /* ENGINE */
+    ]; 
+    
     let currentSpread = 0;
+
     function updatePages() {
         const lC = document.getElementById('L-C'), rC = document.getElementById('R-C');
         const lP = document.getElementById('L-PAGE'), rP = document.getElementById('R-PAGE');
         const lData = MY_STORY[currentSpread * 2] || "";
         const rData = MY_STORY[(currentSpread * 2) + 1] || "";
+        
         lC.innerHTML = lData; rC.innerHTML = rData;
-        lData.includes('<img') ? lP.classList.add('no-padding') : lP.classList.remove('no-padding');
-        rData.includes('<img') ? rP.classList.add('no-padding') : rP.classList.remove('no-padding');
+        
+        const hasImgL = lData.includes('<img');
+        const hasImgR = rData.includes('<img');
+
+        hasImgL ? lP.classList.add('no-padding') : lP.classList.remove('no-padding');
+        hasImgR ? rP.classList.add('no-padding') : rP.classList.remove('no-padding');
+
+        const isSpoilerOn = localStorage.getItem('spoiler-mode') === 'true';
+        
+        [lP, rP].forEach(page => {
+            page.classList.remove('revealed'); 
+            if (isSpoilerOn && page.classList.contains('no-padding')) {
+                page.classList.add('spoiler-active');
+            } else {
+                page.classList.remove('spoiler-active');
+            }
+        });
+        
         window.scrollTo(0, 0); 
     }
-    function nextPage() { if ((currentSpread + 1) * 2 < MY_STORY.length) { currentSpread++; updatePages(); } }
-    function prevPage() { if (currentSpread > 0) { currentSpread--; updatePages(); } }
-    updatePages();
+
+    function nextPage() { 
+        const rP = document.getElementById('R-PAGE');
+        if (rP.classList.contains('spoiler-active') && !rP.classList.contains('revealed')) {
+            rP.classList.add('revealed');
+            return;
+        }
+        if ((currentSpread + 1) * 2 < MY_STORY.length) { 
+            currentSpread++; 
+            updatePages(); 
+        } 
+    }
+
+    function prevPage() { 
+        const lP = document.getElementById('L-PAGE');
+        if (lP.classList.contains('spoiler-active') && !lP.classList.contains('revealed')) {
+            lP.classList.add('revealed');
+            return;
+        }
+        if (currentSpread > 0) { 
+            currentSpread--; 
+            updatePages(); 
+        } 
+    }
+
+    function updateRatio(val) {
+        document.documentElement.style.setProperty('--spread-ratio', val);
+        document.body.setAttribute('data-ratio', val); 
+        localStorage.setItem('individuals-ratio', val);
+    }
+
+    window.onload = () => {
+        if (localStorage.getItem('site-theme') === 'light') {
+            document.body.classList.add('light-theme');
+        }
+        const saved = localStorage.getItem('individuals-ratio') || "1.33";
+        document.getElementById('ratioSelect').value = saved;
+        updateRatio(saved);
+        updatePages();
+    };
 </script>
 </body>
 </html>

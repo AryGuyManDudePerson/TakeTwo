@@ -2,12 +2,30 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CHAPTER 02</title>
     <style>
     :root { 
         --bg: #0e0e0e; 
         --page-bg: #151515; 
-        --white-raw: 255, 255, 255; 
+        --white-raw: 255, 255, 255;
+        --spread-ratio: 1.33; 
+        --panel-bg: rgba(20, 20, 20, 0.9);
+        --border-color: #333;
+        --border-light: #222;
+        --input-bg: #000;
+        --text-main: #fff;
+    }
+
+    body.light-theme {
+        --bg: #e5e5e5; 
+        --page-bg: #ffffff; 
+        --white-raw: 0, 0, 0;
+        --panel-bg: rgba(255, 255, 255, 0.9);
+        --border-color: #ccc;
+        --border-light: #ddd;
+        --input-bg: #fff;
+        --text-main: #000;
     }
     
     body { 
@@ -18,23 +36,69 @@
         flex-direction: column; 
         align-items: center; 
         min-height: 100vh;
-        transform: scale(0.8); 
-        transform-origin: top center; 
-        width: 125%; 
-        left: -12.5%; 
-        position: relative;
+        color: var(--text-main);
     }
+
+    .spoiler-active img {
+        filter: blur(50px) grayscale(1);
+        transition: none !important;
+    }
+
+    .revealed img {
+        filter: blur(0) grayscale(0) !important;
+        transition: none !important;
+    }
+
+    .spoiler-active:not(.revealed)::after {
+        content: "SPOILER: CLICK TO REVEAL";
+        position: absolute;
+        top: 50%; left: 50%;
+        transform: translate(-50%, -50%);
+        background: rgba(0,0,0,0.8);
+        color: white;
+        padding: 10px 15px;
+        font-size: 10px;
+        letter-spacing: 2px;
+        z-index: 20;
+        pointer-events: none;
+        border: 1px solid #444;
+        text-transform: uppercase;
+        font-family: 'Arial Black', sans-serif;
+    }
+
+    .settings-panel {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 100;
+        background: var(--panel-bg);
+        padding: 12px;
+        border: 1px solid var(--border-color);
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        font-size: 10px;
+        text-transform: uppercase;
+    }
+    
+    select {
+        background: var(--input-bg);
+        color: var(--text-main);
+        border: 1px solid var(--border-color);
+        padding: 5px;
+    }
+
+    .book-container { width: 90%; max-width: 1400px; margin: 40px 0; }
 
     .book-spread {
         display: grid; 
         grid-template-columns: 1fr 1fr; 
-        width: 1200px; 
-        height: 850px;
+        width: 100%;
+        aspect-ratio: var(--spread-ratio); 
         background: var(--page-bg); 
-        border: 1px solid #222; 
-        box-shadow: 15px 15px 0px #000;
+        border: 1px solid var(--border-light); 
         position: relative; 
-        margin-top: 50px;
+        overflow: hidden;
     }
 
     .book-spread::before { 
@@ -42,137 +106,164 @@
         position: absolute; 
         left: 50%; top: 0; bottom: 0; 
         width: 1px; 
-        background: #222; 
-        transform: translateX(-50%); 
+        background: var(--border-light);
         z-index: 5; 
     }
 
     .page { 
-        padding: 60px 80px; 
         position: relative; 
-        overflow: hidden; 
         display: flex; 
         flex-direction: column; 
-        height: 100%; /* Ensures centering works */
+        height: 100%;
+        padding: 60px 80px; 
+        box-sizing: border-box;
+        overflow: hidden;
     }
 
-    /* --- NARRATIVE STYLE --- */
-    .content p {
-        font-size: 1.15rem; 
-        font-weight: 400; 
-        line-height: 1.6;
-        margin-bottom: 20px;
-        color: rgba(var(--white-raw), 0.75);
-    }
+    .content { width: 100%; height: 100%; }
+    .content p { font-size: 1.1rem; line-height: 1.6; margin-bottom: 20px; color: rgba(var(--white-raw), 0.7); }
+    .d { display: flex !important; background: rgba(var(--white-raw), 0.05); padding: 10px; border-radius: 4px; margin-bottom: 20px;}
+    .d::before { content: ""; min-width: 3px; height: 1.2rem; background: rgba(var(--white-raw), 0.4); margin-right: 12px; }
 
-    /* --- DIALOGUE STYLE --- */
-    .d {
-        display: flex !important;
-        align-items: flex-start; /* Better for multi-line dialogue */
-        color: rgba(var(--white-raw), 1.0);
-        margin: 10px 0 20px 0;
-        padding: 8px 12px;
-        background: rgba(255,255,255,0.05);
-        border-radius: 4px;
-        font-size: 1.15rem;
-        font-weight: 400;
-    }
+    .no-padding { padding: 0 !important; }
+    .no-padding img { width: 100%; height: 100%; display: block; object-fit: fill; }
 
-    /* Vertical bar ONLY for dialogue */
-    .d::before {
-        content: "";
-        display: inline-block;
-        min-width: 3px;
-        height: 1.2rem; 
-        background: rgba(var(--white-raw), 0.4);
-        margin-right: 12px;
-        margin-top: 4px;
-        border-radius: 2px;
-    }
-
-    /* --- THE SCREAM (HUGE TEXT) --- */
-.s {
-    /* [1] KILL THE INHERITED DIALOGUE BAR */
-    display: block !important; 
-    background: transparent !important; 
-    padding: 0 !important;
-    border: none !important;
-    
-    /* [2] TEXT SPECS */
-    font-size: 4.5rem !important; 
-    font-weight: 900 !important;
-    color: rgba(var(--white-raw), 1.0) !important;
-    line-height: 1;
-    text-align: center;
-    margin: auto 0 !important; 
-    word-break: break-all; 
-    letter-spacing: -2px;
-    text-decoration: none !important; /* Forces no literal strikethrough */
-}
-
-/* [3] HARD DELETE THE VERTICAL BAR FOR SCREAMS */
-.s::before {
-    content: none !important;
-    display: none !important;
-    width: 0 !important;
-    height: 0 !important;
-    margin: 0 !important;
-}
+    [data-ratio="1.77"] .no-padding { background: #ffffff !important; }
+    [data-ratio="1.77"] .no-padding .content { display: flex; justify-content: center; align-items: center; }
+    [data-ratio="1.77"] .no-padding img { object-fit: contain; }
 
     .nav-zone { position: absolute; top: 0; bottom: 0; width: 50%; z-index: 10; cursor: pointer; }
     .left-zone { left: 0; } .right-zone { right: 0; }
-    .no-padding { padding: 0 !important; }
-    .no-padding .content img { width: 100%; height: 850px; object-fit: cover; display: block; }
 
-    .footer-nav { margin: 80px 0 120px 0; width: 100%; display: flex; justify-content: center; }
-    .menu-btn { 
+    .footer-nav { margin: 20px 0 60px 0; z-index: 10; }
+    .return-btn { 
         text-decoration: none; 
-        color: rgba(var(--white-raw), 0.5); 
-        padding: 12px 30px; 
-        font-size: 0.85rem; 
-        border: 1px solid #333; 
-        transition: 0.2s;
-    }
-    .menu-btn:hover {
-        color: rgba(var(--white-raw), 1.0);
-        border-color: #555;
+        color: rgba(var(--white-raw), 0.4); 
+        font-size: 12px; 
+        letter-spacing: 2px;
+        padding: 10px 20px;
+        border: 1px solid var(--border-color);
     }
 </style>
 </head>
-<body>
+    
+<body data-ratio="1.33">
+
+    <div class="settings-panel">
+        <span>SPREAD RATIO:</span>
+        <select id="ratioSelect" onchange="updateRatio(this.value)">
+            <option value="1.33">4:3</option>
+            <option value="1.5">3:2</option>
+            <option value="1.25">5:4</option>
+            <option value="1.77">16:9 (Letterboxed)</option>
+        </select>
+    </div>
+
+    <div class="book-container">
+        <main class="book-spread">
+            <div class="nav-zone left-zone" onclick="prevPage()"></div>
+            <div class="nav-zone right-zone" onclick="nextPage()"></div>
+            <article class="page" id="L-PAGE"><div class="content" id="L-C"></div></article>
+            <article class="page" id="R-PAGE"><div class="content" id="R-C"></div></article>
+        </main>
+    </div>
+
+    <footer class="footer-nav">
+        <a href="index.html" class="return-btn">RETURN</a>
+    </footer>
 
 <script>
-    /* STORY INPUT */
-    const MY_STORY = [
-        "<img src='image/02/01.jpg'>",
-    ];
-</script>
-
-    <main class="book-spread">
-        <div class="nav-zone left-zone" onclick="prevPage()"></div>
-        <div class="nav-zone right-zone" onclick="nextPage()"></div>
-        <article class="page" id="L-PAGE"><div class="content" id="L-C"></div></article>
-        <article class="page" id="R-PAGE"><div class="content" id="R-C"></div></article>
-    </main>
-
-    <footer class="footer-nav"><a href="index.html" class="menu-btn">RETURN</a></footer>
-
-<script>
-    /* ENGINE */
+    // hey i put story here dood, ok
+    const MY_STORY = [ 
+        "<img src='image/02/1.jpg'>",
+        "<img src='image/02/2.jpg'>",
+        "<p>The door handle clicked uselessly in Andy's grip.</p><p class='d'>SAI: You know that shit's locked from the inside.</p><p>Andy once again shook the door handle even harder than last time, only letting go when Sai swerved his vehicle abruptly, forcing Andy to sink into the passenger seat with a thousand-yard stare.</p><p class='d'>SAI: Yeah, I tuned it that way.</p><p>Sai reached for the radio, eyes still on the road.</p><p><em>['People continued to protest as Grave Tax continues to skyrocket. Nature Conservancy warns of severe environmental effects if corpses are continued to be disposed of through—']</em></p><p><strong>Click.</strong></p><p><em>['The ongoing war does not appear to show any signs of de-escala—']</em></p><p><strong>Click.</strong></p><p><em>['Come get a job! Starting from only four dollars an hour! Apply at—']</em></p><p><strong>Click.</strong></p>",
+        "<p>Sai pulled a long breath out through his nose and let it die somewhere on the dashboard.</p><p class='d'>SAI: ...Why have you been neglecting us?</p><p>It didn't really feel like a question.</p><p class='d'>ANDY: You can drop me off at the nearest Arby's.</p><p class='d'>ANDY: I'll walk from there.</p><p class='d'>SAI: Andy.</p><p class='d'>ANDY: I'm just saying. It's an option.</p><p>Sai's thumbs rolled over the steering wheel.</p><p class='d'>SAI: You haven't picked up my calls.</p><p class='d'>SAI: Not KJ's. Not anyone's.</p><p class='d'>SAI: Have you given up on us?</p>",
+        "<p class='d'>ANDY: Nah.</p><p class='d'>ANDY: I still care about all of you.</p><p>Sai sucked his lips in. Both palms came down flat on the steering wheel rim. His voice evened out.</p><p class='d'>SAI: Alright then.</p><p class='d'>SAI: When is my birthday?</p><p>Andy stared ahead. He rubbed his eye with the back of his wrist. Slowly, almost like he was hoping the answer would materialise if he just shifted his weight enough, he turned toward the door and pulled the handle again.</p><p>To no avail...</p><p class='d'>SAI: It's today, Andy.</p><p>Andy let go of the handle and settled back.</p>",
+        "<p class='d'>ANDY: Look.</p><p class='d'>ANDY: I've matured. I'm past all of that. The life we were living is just... dangerous.</p><p class='d'>ANDY:  I'm trying to get back to something normal. That's all I want.</p><p class='d'>SAI: I'm not buying into that.</p><p class='d'>SAI: That's a worse lie than saying my ballsack is uneven.</p><p>Andy opened his mouth. Closed it. <em>Nevermind</em>. Under literally any other circumstances he would have had something for that.</p><p class='d'>SAI: Just come through for your homeboy's birthday.</p><p class='d'>SAI: All I'm asking for.</p><p>Andy made sure his mouth remained shut. He found Sai's reflection sitting in the side mirror on the driver's door and just looked at it for a while.</p>",
+        "<p>Sai pulled up and cut the engine. He patted Andy once on the back, nodding ahead toward the door. Andy got up then walked up to the entrance, stopped, and rested his bandaged hand on the doorknob.</p><p>Then he turned around and started walking the other way.</p><p>Sai watched him from the driveway with an expression that had given up trying to understand.</p><p>Andy made it about four steps before he walked directly into someone and collapsed.</p><p>That someone in question remained standing. She looked down at Andy on the ground with the same expression she probably used to read receipts. Butterfly shaped sweater, at least at the ends of it. Butterfly clip on her beret. The whole fucking leitmotif was just based on butterflies.</p><p class='d'>ANDY: Kj what the fu—</p><p>Kj reached down and grabbed him by the sweater, dragging him across the textured brick pavement.</p>",
+        "<img src='image/02/3.jpg'>",
+        "<p class='d'>SAI: Come on, everybody misses you.</p><p>Sai nudged the door open.</p><p>The first thing that happened was everyone looked at Andy.</p><p>The second thing that happened was everyone stopped looking at Andy and went back to whatever they were doing.</p><p>Ary and Dennis were cross-legged on the floor in front of the TV, controllers in hand. Hieu was draped across the couch above them, dangling a chip down toward Dennis without looking away from the screen, feeding him some, even.</p><p class='d'>ZHIYNL: Yo can you not do that</p><p> Zhiynl said from the other end of the couch, staring at the game.</p><p class='d'>ZHIYNL: That's literally the gayest shit I've seen since watching my dad shop at IKEA.</p><p>Dennis opened his mouth to say something, perhaps to demand another chip.</p><p class='d'>ZHIYNL: YO FUCKING COME HE—</p>",
+        "<p>Zhiynl lunged forward to grab the bag of chips. The couch tipped. The couch crashed. Zhiynl, the chips, and whatever dignity was left in that corner of the room went with it.</p><p>From the kitchen, someone — along with a fire extinguisher — came flying out of the doorway. Her head caught the edge of a stool on the way down, and stayed there.</p><p>Win came out right after her to grab the fire extinguisher resting on her face. He glanced over at the door, took notice of the trio.</p><p class='d'>WIN: Hey.</p><p>He waddled his ass back into the kitchen.</p><p>Andy stood in the entrance and took in the room.</p><p>Sai gave him one pat on the shoulder, then disappeared into the kitchen. Somewhere between the door and the dining table, KJ had also vanished, reappearing already seated, picking through the food like she's defusing a bomb. She pulled a slice of watermelon off the plate and held it out toward Andy without looking up.</p><p class='d'>KJ: Have a slice.</p>",
+        "<p>Andy reluctantly took the watermelon slices.</p><p>They just stared down into each other as they eat.</p><p><em>I'm not having fun.</em></p><p><em>Which is fine. I'm not always having fun.</em></p><p><em>But I'm not having fun at my best friend's birthday, which is worse.</em></p><p><em>And I know I'm not having fun at my best friend's birthday, which is even worse than that.</em></p><p><em>And I'm sitting here actively dreading—</em></p><p>A party blower hit his face about 5 times with a clumsy tempo. It kept playing a 'padum :]' sound whenever it was blown onto.</p><p>More and more people funnelled toward the dining table in a procession. Careful steps, Matt had the cake, both hands were very committed to the cause.</p><p>Someone in the back was already going <em>'watch out, watch out, watch out' and right on the third one, somebody caught Matt's shoulder by just enough.</em></p><p><strong>'HAPPY—'</strong></p>",
+        "<p>The cake kissed the floor. A single, definitive <em>plap</em> rang out.</p><p>The room went the kind of quiet that was so cringe it was comical. It was more awkward than two people reaching for the same door handle and then doing the little dance. More awkward than an adolescent's first date. More awkward than the date's parents watching.</p><p>Zhiynl patted Sai on the back.</p><p class='d'>ZHIYNL: Happy birthday bro.</p><p>Everyone was just standing there, staring at the dropped cake.</p><p>Zhiynl cleared his throat for a minute straight. Then kept clearing it. He cleared his throat for what genuinely felt like a full minute, before he glanced around at everyone else in the room.</p>",
+        "<p>Audible gunshots and screams ring out from a house across the street as it went up in flames. No, there were no sirens. mostly just the sound of people cheering is prominent, along with some glass breaking here and there.</p><p>Andy and Sai sat on a bench that was just left there in the backyard, growing cobwebs and dust. Kj took another bench all to herself, laying right on it.</p><p>Andy and Sai had cups containing fruit cocktails, and it was mostly silent, relative to everything, until Andy choked and coughed on his drink.</p><p class='d'>ANDY: You kinda lied to me</p><p class='d'>ANDY: No one seemed concerned about me at all.</p>Sai looked at his cup.<p class='d'>SAI: My bad.</p><p class='d'>SAI: Guess I was the only one that missed you.</p><p>Kj slowly and casually raised up an arm</p>",
+        "<p class='d'>KJ: He didn't miss you</p><p class='d'>KJ: He called you because this faction is in danger.</p><p class='d'>SAI: Kj you fucking—</p><p>A very, very loud sound of <em>Clash Royale</em> starting up played from Kj's phone.</p><p>So they just sat in it for a moment. Sai reached over and took Andy's empty cup, stacking it under his own.</p><p class='d'>SAI: The Underworld is spiralling.</p><p class='d'>SAI: Everyone in the nation is going to war against each other just for supplies.</p><p class='d'>SAI: We'd be next before we knew it.</p><p class='d'>SAI: They'll ambush us... do their best to mutilate, kill, turn us into another LiveLeak video and shit just to get their hands on a day's worth of painkillers.</p>",
+        "<p>Andy tilted his head back and let out a long, irritated breath toward the sky.</p><p class='d'>ANDY: I don't have anything to do with that.</p><p class='d'>KJ: Andy you're the leader.</p><p>Andy stood up. He stretched, brushed the dust off his clothes, and smiled at both of them in a way that was meant to communicate that he was done with this conversation and wished them both well.</p><p class='d'>KJ: Hey, Andy.</p><p>Kj called out to him with her eyes still fixated on her phone.</p><p class='d'>KJ: Isn't this your house?</p><p>She held the screen up towards Andy, showing him a photo of a building completely swallowed in flames. A familiar looking building.</p><p><em>Isn't this my...?</em></p>",
+        "<img src='image/02/4.jpg'>",
+        "<img src='image/02/white.jpg'>",
+        "<img src='image/02/thanks.jpg'>"
+    ]; 
+    
     let currentSpread = 0;
+
     function updatePages() {
         const lC = document.getElementById('L-C'), rC = document.getElementById('R-C');
         const lP = document.getElementById('L-PAGE'), rP = document.getElementById('R-PAGE');
         const lData = MY_STORY[currentSpread * 2] || "";
         const rData = MY_STORY[(currentSpread * 2) + 1] || "";
+        
         lC.innerHTML = lData; rC.innerHTML = rData;
-        lData.includes('<img') ? lP.classList.add('no-padding') : lP.classList.remove('no-padding');
-        rData.includes('<img') ? rP.classList.add('no-padding') : rP.classList.remove('no-padding');
+        
+        const hasImgL = lData.includes('<img');
+        const hasImgR = rData.includes('<img');
+
+        hasImgL ? lP.classList.add('no-padding') : lP.classList.remove('no-padding');
+        hasImgR ? rP.classList.add('no-padding') : rP.classList.remove('no-padding');
+
+        const isSpoilerOn = localStorage.getItem('spoiler-mode') === 'true';
+        
+        [lP, rP].forEach(page => {
+            page.classList.remove('revealed'); 
+            if (isSpoilerOn && page.classList.contains('no-padding')) {
+                page.classList.add('spoiler-active');
+            } else {
+                page.classList.remove('spoiler-active');
+            }
+        });
+        
         window.scrollTo(0, 0); 
     }
-    function nextPage() { if ((currentSpread + 1) * 2 < MY_STORY.length) { currentSpread++; updatePages(); } }
-    function prevPage() { if (currentSpread > 0) { currentSpread--; updatePages(); } }
-    updatePages();
+
+    function nextPage() { 
+        const rP = document.getElementById('R-PAGE');
+        if (rP.classList.contains('spoiler-active') && !rP.classList.contains('revealed')) {
+            rP.classList.add('revealed');
+            return;
+        }
+        if ((currentSpread + 1) * 2 < MY_STORY.length) { 
+            currentSpread++; 
+            updatePages(); 
+        } 
+    }
+
+    function prevPage() { 
+        const lP = document.getElementById('L-PAGE');
+        if (lP.classList.contains('spoiler-active') && !lP.classList.contains('revealed')) {
+            lP.classList.add('revealed');
+            return;
+        }
+        if (currentSpread > 0) { 
+            currentSpread--; 
+            updatePages(); 
+        } 
+    }
+
+    function updateRatio(val) {
+        document.documentElement.style.setProperty('--spread-ratio', val);
+        document.body.setAttribute('data-ratio', val); 
+        localStorage.setItem('individuals-ratio', val);
+    }
+
+    window.onload = () => {
+        if (localStorage.getItem('site-theme') === 'light') {
+            document.body.classList.add('light-theme');
+        }
+        const saved = localStorage.getItem('individuals-ratio') || "1.33";
+        document.getElementById('ratioSelect').value = saved;
+        updateRatio(saved);
+        updatePages();
+    };
 </script>
 </body>
 </html>
