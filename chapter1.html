@@ -10,7 +10,7 @@
         --page-bg: #151515; 
         --white-raw: 255, 255, 255;
         --spread-ratio: 1.33; 
-        --panel-bg: rgba(20, 20, 20, 0.9);
+        --panel-bg: rgba(20, 20, 20, 0.95);
         --border-color: #333;
         --border-light: #222;
         --input-bg: #000;
@@ -21,7 +21,7 @@
         --bg: #e5e5e5; 
         --page-bg: #ffffff; 
         --white-raw: 0, 0, 0;
-        --panel-bg: rgba(255, 255, 255, 0.9);
+        --panel-bg: rgba(255, 255, 255, 0.95);
         --border-color: #ccc;
         --border-light: #ddd;
         --input-bg: #fff;
@@ -29,7 +29,7 @@
     }
     
     body { 
-        font-family: 'Segoe UI', sans-serif; 
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
         background-color: var(--bg); 
         margin: 0;
         display: flex; 
@@ -39,56 +39,12 @@
         color: var(--text-main);
     }
 
-    .spoiler-active img {
-        filter: blur(50px) grayscale(1);
-        transition: none !important;
+    /* --- Core Layout --- */
+    .book-container { 
+        width: 95%; 
+        max-width: 1400px; 
+        margin: 20px 0; 
     }
-
-    .revealed img {
-        filter: blur(0) grayscale(0) !important;
-        transition: none !important;
-    }
-
-    .spoiler-active:not(.revealed)::after {
-        content: "SPOILER: CLICK TO REVEAL";
-        position: absolute;
-        top: 50%; left: 50%;
-        transform: translate(-50%, -50%);
-        background: rgba(0,0,0,0.8);
-        color: white;
-        padding: 10px 15px;
-        font-size: 10px;
-        letter-spacing: 2px;
-        z-index: 20;
-        pointer-events: none;
-        border: 1px solid #444;
-        text-transform: uppercase;
-        font-family: 'Arial Black', sans-serif;
-    }
-
-    .settings-panel {
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
-        z-index: 100;
-        background: var(--panel-bg);
-        padding: 12px;
-        border: 1px solid var(--border-color);
-        display: flex;
-        flex-direction: column;
-        gap: 5px;
-        font-size: 10px;
-        text-transform: uppercase;
-    }
-    
-    select {
-        background: var(--input-bg);
-        color: var(--text-main);
-        border: 1px solid var(--border-color);
-        padding: 5px;
-    }
-
-    .book-container { width: 90%; max-width: 1400px; margin: 40px 0; }
 
     .book-spread {
         display: grid; 
@@ -99,8 +55,10 @@
         border: 1px solid var(--border-light); 
         position: relative; 
         overflow: hidden;
+        transition: aspect-ratio 0.3s ease;
     }
 
+    /* Middle Divider */
     .book-spread::before { 
         content: ""; 
         position: absolute; 
@@ -117,42 +75,129 @@
         height: 100%;
         padding: 60px 80px; 
         box-sizing: border-box;
-        overflow: hidden;
+        overflow-y: auto; /* Allow internal scroll if text is huge */
     }
 
+    /* --- Mobile Support (Vertical Stack) --- */
+    @media (max-width: 900px) {
+        .book-container { margin: 10px 0; width: 100%; }
+        
+        .book-spread {
+            grid-template-columns: 1fr; /* Stack pages */
+            aspect-ratio: auto !important; /* Kill forced ratio on mobile portrait */
+            height: auto;
+            border: none;
+        }
+
+        .book-spread::before { display: none; } /* Hide divider */
+
+        .page {
+            padding: 40px 25px;
+            height: auto;
+            min-height: 400px;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .settings-panel {
+            left: 0 !important; right: 0 !important; bottom: 0 !important;
+            flex-direction: row !important;
+            justify-content: space-between;
+            width: 100%;
+            border-left: none; border-right: none;
+            padding: 15px 20px !important;
+            box-sizing: border-box;
+        }
+
+        .footer-nav { margin-bottom: 100px; } /* Don't hide behind settings bar */
+    }
+
+    /* --- Landscape Support (Bring back the spread) --- */
+    @media (max-width: 900px) and (orientation: landscape) {
+        .book-spread {
+            grid-template-columns: 1fr 1fr;
+            aspect-ratio: var(--spread-ratio) !important;
+        }
+        .book-spread::before { display: block; }
+        .page { padding: 30px; }
+    }
+
+    /* --- Content Styling --- */
     .content { width: 100%; height: 100%; }
-    .content p { font-size: 1.1rem; line-height: 1.6; margin-bottom: 20px; color: rgba(var(--white-raw), 0.7); }
-    .d { display: flex !important; background: rgba(var(--white-raw), 0.05); padding: 10px; border-radius: 4px; margin-bottom: 20px;}
-    .d::before { content: ""; min-width: 3px; height: 1.2rem; background: rgba(var(--white-raw), 0.4); margin-right: 12px; }
+    .content p { font-size: 1.1rem; line-height: 1.7; margin-bottom: 20px; color: rgba(var(--white-raw), 0.8); }
+    .d { display: flex !important; background: rgba(var(--white-raw), 0.05); padding: 12px; border-radius: 4px; margin-bottom: 20px; font-weight: 500;}
+    .d::before { content: ""; min-width: 4px; height: 1.2rem; background: rgba(var(--white-raw), 0.4); margin-right: 12px; }
 
     .no-padding { padding: 0 !important; }
-    .no-padding img { width: 100%; height: 100%; display: block; object-fit: fill; }
+    .no-padding img { width: 100%; height: 100%; display: block; object-fit: cover; }
 
-    [data-ratio="1.77"] .no-padding { background: #ffffff !important; }
-    [data-ratio="1.77"] .no-padding .content { display: flex; justify-content: center; align-items: center; }
-    [data-ratio="1.77"] .no-padding img { object-fit: contain; }
+    /* --- UI Components --- */
+    .settings-panel {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 100;
+        background: var(--panel-bg);
+        backdrop-filter: blur(8px);
+        padding: 12px;
+        border: 1px solid var(--border-color);
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    
+    select {
+        background: var(--input-bg);
+        color: var(--text-main);
+        border: 1px solid var(--border-color);
+        padding: 8px;
+        cursor: pointer;
+        outline: none;
+    }
 
-    .nav-zone { position: absolute; top: 0; bottom: 0; width: 50%; z-index: 10; cursor: pointer; }
+    .nav-zone { position: absolute; top: 0; bottom: 0; width: 40%; z-index: 10; cursor: pointer; }
     .left-zone { left: 0; } .right-zone { right: 0; }
-    /*Andy Wan more like... Poopy Wan...*/
+
     .footer-nav { margin: 20px 0 60px 0; z-index: 10; }
     .return-btn { 
         text-decoration: none; 
-        color: rgba(var(--white-raw), 0.4); 
+        color: rgba(var(--white-raw), 0.5); 
         font-size: 12px; 
         letter-spacing: 2px;
-        padding: 10px 20px;
+        padding: 12px 25px;
         border: 1px solid var(--border-color);
+        transition: 0.3s;
+    }
+    .return-btn:hover { background: var(--text-main); color: var(--bg); }
+
+    /* Spoiler System */
+    .spoiler-active img { filter: blur(60px) grayscale(1); transition: 0.3s; }
+    .revealed img { filter: blur(0) grayscale(0) !important; }
+    .spoiler-active:not(.revealed)::after {
+        content: "SPOILER: CLICK TO REVEAL";
+        position: absolute;
+        top: 50%; left: 50%;
+        transform: translate(-50%, -50%);
+        background: rgba(0,0,0,0.9);
+        color: white;
+        padding: 12px 20px;
+        font-size: 11px;
+        letter-spacing: 2px;
+        z-index: 20;
+        pointer-events: none;
+        border: 1px solid #555;
     }
 </style>
 </head>
     
-<body data-ratio="1.33">
+<body>
 
     <div class="settings-panel">
         <span>SPREAD RATIO:</span>
         <select id="ratioSelect" onchange="updateRatio(this.value)">
-            <option value="1.33">4:3</option>
+            <option value="1.33">4:3 (Default)</option>
             <option value="1.5">3:2</option>
             <option value="1.25">5:4</option>
             <option value="1.77">16:9 (Letterboxed)</option>
@@ -169,12 +214,11 @@
     </div>
 
     <footer class="footer-nav">
-        <a href="index.html" class="return-btn">RETURN</a>
+        <a href="index.html" class="return-btn">RETURN TO MENU</a>
     </footer>
 
 <script>
-    // hey i put story here dood, ok
-    const MY_STORY = [ 
+      const MY_STORY = [ 
          "<img src='image/01/1.jpg'>",
         "<img src='image/01/2.jpg'>",
         "<img src='image/01/3.jpg'>",
@@ -199,17 +243,22 @@
         "<img src='image/01/12.jpg'>",
         "<img src='image/01/white.jpg'>",
         "<img src='image/01/thanks.jpg'>"
-    ]; 
+    ];
     
     let currentSpread = 0;
 
     function updatePages() {
         const lC = document.getElementById('L-C'), rC = document.getElementById('R-C');
         const lP = document.getElementById('L-PAGE'), rP = document.getElementById('R-PAGE');
+        
         const lData = MY_STORY[currentSpread * 2] || "";
         const rData = MY_STORY[(currentSpread * 2) + 1] || "";
         
-        lC.innerHTML = lData; rC.innerHTML = rData;
+        lC.innerHTML = lData; 
+        rC.innerHTML = rData;
+
+        // Hide right page container if it's empty (odd number of total pages)
+        rP.style.display = rData === "" ? "none" : "flex";
         
         const hasImgL = lData.includes('<img');
         const hasImgR = rData.includes('<img');
@@ -228,11 +277,12 @@
             }
         });
         
-        window.scrollTo(0, 0); 
+        window.scrollTo({ top: 0, behavior: 'smooth' }); 
     }
 
     function nextPage() { 
         const rP = document.getElementById('R-PAGE');
+        // Handle spoiler reveal before page turn
         if (rP.classList.contains('spoiler-active') && !rP.classList.contains('revealed')) {
             rP.classList.add('revealed');
             return;

@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CHAPTER 03 - THE INDIVIDUALS</title>
+    <style>
+    :root { 
+        --bg: #0e0e0e; 
+        --page-bg: #151515; 
+        --white-raw: 255, 255, 255;
+        --spread-ratio: 1.33; 
+        --panel-bg: rgba(20, 20, 20, 0.95);
+        --border-color: #333;
+        --border-light: #222;
+        --input-bg: #000;
+        --text-main: #fff;
+    }
+
+    body.light-theme {
+        --bg: #e5e5e5; 
+        --page-bg: #ffffff; 
+        --white-raw: 0, 0, 0;
+        --panel-bg: rgba(255, 255, 255, 0.95);
+        --border-color: #ccc;
+        --border-light: #ddd;
+        --input-bg: #fff;
+        --text-main: #000;
+    }
+    
+    body { 
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+        background-color: var(--bg); 
+        margin: 0;
+        display: flex; 
+        flex-direction: column; 
+        align-items: center; 
+        min-height: 100vh;
+        color: var(--text-main);
+    }
+
+    /* --- Core Layout (Desktop Spread) --- */
+    .book-container { 
+        width: 95%; 
+        max-width: 1400px; 
+        margin: 20px 0; 
+    }
+
+    .book-spread {
+        display: grid; 
+        grid-template-columns: 1fr 1fr; 
+        width: 100%;
+        aspect-ratio: var(--spread-ratio); 
+        background: var(--page-bg); 
+        border: 1px solid var(--border-light); 
+        position: relative; 
+        overflow: hidden;
+        transition: aspect-ratio 0.3s ease;
+    }
+
+    /* Middle Divider */
+    .book-spread::before { 
+        content: ""; 
+        position: absolute; 
+        left: 50%; top: 0; bottom: 0; 
+        width: 1px; 
+        background: var(--border-light);
+        z-index: 5; 
+    }
+
+    .page { 
+        position: relative; 
+        display: flex; 
+        flex-direction: column; 
+        height: 100%;
+        padding: 60px 80px; 
+        box-sizing: border-box;
+        overflow-y: auto; /* Allow internal scroll if text is huge */
+    }
+
+    /* --- Content Styling --- */
+    .content { width: 100%; height: 100%; }
+    .content p { font-size: 1.1rem; line-height: 1.7; margin-bottom: 20px; color: rgba(var(--white-raw), 0.8); }
+    .d { display: flex !important; background: rgba(var(--white-raw), 0.05); padding: 12px; border-radius: 4px; margin-bottom: 20px; font-weight: 500;}
+    .d::before { content: ""; min-width: 4px; height: 1.2rem; background: rgba(var(--white-raw), 0.4); margin-right: 12px; }
+
+    .no-padding { padding: 0 !important; }
+    
+    /* Global image rule: make sure the art is visible, not cropped, by default */
+    .no-padding img { 
+        width: 100%; 
+        height: 100%; 
+        display: block; 
+        object-fit: contain; /* Fit whole art inside defined spread boxes on desktop */
+    }
+
+    /* Ratio override (desktop/landscape only) ensures contain mode for letterboxing if specific ratio is picked */
+    [data-ratio="1.77"] .no-padding .content { display: flex; justify-content: center; align-items: center; }
+    [data-ratio="1.77"] .no-padding img { object-fit: contain; }
+
+    /* --- UI Components --- */
+    .settings-panel {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        z-index: 100;
+        background: var(--panel-bg);
+        backdrop-filter: blur(8px);
+        padding: 12px;
+        border: 1px solid var(--border-color);
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    
+    select {
+        background: var(--input-bg);
+        color: var(--text-main);
+        border: 1px solid var(--border-color);
+        padding: 8px;
+        cursor: pointer;
+        outline: none;
+    }
+
+    .nav-zone { position: absolute; top: 0; bottom: 0; width: 40%; z-index: 10; cursor: pointer; }
+    .left-zone { left: 0; } .right-zone { right: 0; }
+
+    .footer-nav { margin: 20px 0 60px 0; z-index: 10; }
+    .return-btn { 
+        text-decoration: none; 
+        color: rgba(var(--white-raw), 0.5); 
+        font-size: 12px; 
+        letter-spacing: 2px;
+        padding: 12px 25px;
+        border: 1px solid var(--border-color);
+        transition: 0.3s;
+    }
+    .return-btn:hover { background: var(--text-main); color: var(--bg); }
+
+    /* Spoiler System */
+    .spoiler-active img { filter: blur(60px) grayscale(1); transition: 0.3s; }
+    .revealed img { filter: blur(0) grayscale(0) !important; }
+    .spoiler-active:not(.revealed)::after {
+        content: "SPOILER: CLICK TO REVEAL";
+        position: absolute;
+        top: 50%; left: 50%;
+        transform: translate(-50%, -50%);
+        background: rgba(0,0,0,0.9);
+        color: white;
+        padding: 12px 20px;
+        font-size: 11px;
+        letter-spacing: 2px;
+        z-index: 20;
+        pointer-events: none;
+        border: 1px solid #555;
+    }
+
+    /* ==========================================================
+       === Mobile Support Section ===
+       ========================================================== */
+
+    /* 1. Mobile Portrait (Stacked View) */
+    @media (max-width: 900px) {
+        .book-container { margin: 10px 0; width: 100%; }
+        
+        .book-spread {
+            grid-template-columns: 1fr; /* Stack pages */
+            aspect-ratio: auto !important; /* Kill forced ratio */
+            height: auto;
+            border: none;
+        }
+
+        .book-spread::before { display: none; } /* Hide divider */
+
+        .page {
+            padding: 40px 25px;
+            height: auto;
+            min-height: 400px;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        /* --- THE FIX: specific behavior for images when pages stack --- */
+        
+        .page.no-padding {
+            height: auto;
+            min-height: auto; /* Let the image dictate page height */
+        }
+        
+        .no-padding img { 
+            width: 100%; 
+            height: auto !important; /* Force natural aspect scaling, prevents cropping/stretching */
+            object-fit: fill; /* Not actually filling/cropping because height is auto */
+        }
+        
+        /* Ensure overrides don't interfere with mobile scaling */
+        [data-ratio="1.77"] .no-padding .content { display: block; }
+        [data-ratio="1.77"] .no-padding img { object-fit: fill; height: auto !important; }
+
+        /* --- End Fix --- */
+
+        .settings-panel {
+            left: 0 !important; right: 0 !important; bottom: 0 !important;
+            flex-direction: row !important;
+            justify-content: space-between;
+            width: 100%;
+            border-left: none; border-right: none;
+            padding: 15px 20px !important;
+            box-sizing: border-box;
+        }
+
+        .footer-nav { margin-bottom: 100px; } /* Don't hide behind settings bar */
+    }
+
+    /* 2. Mobile Landscape (Bring back the spread, keep art within bounds) */
+    @media (max-width: 900px) and (orientation: landscape) {
+        .book-spread {
+            grid-template-columns: 1fr 1fr;
+            aspect-ratio: var(--spread-ratio) !important;
+        }
+        .book-spread::before { display: block; }
+        
+        .page { padding: 30px; }
+        
+        /* Ensure images scale back to fit the box when spread returns */
+        .page.no-padding { height: 100%; }
+        .no-padding img { height: 100% !important; object-fit: contain; }
+    }
+
+</style>
+</head>
+    
+<body>
+
+    <div class="settings-panel">
+        <span>SPREAD RATIO:</span>
+        <select id="ratioSelect" onchange="updateRatio(this.value)">
+            <option value="1.33">4:3 (Default)</option>
+            <option value="1.5">3:2</option>
+            <option value="1.25">5:4</option>
+            <option value="1.77">16:9 (Letterboxed)</option>
+        </select>
+    </div>
+
+    <div class="book-container">
+        <main class="book-spread">
+            <div class="nav-zone left-zone" onclick="prevPage()"></div>
+            <div class="nav-zone right-zone" onclick="nextPage()"></div>
+            <article class="page" id="L-PAGE"><div class="content" id="L-C"></div></article>
+            <article class="page" id="R-PAGE"><div class="content" id="R-C"></div></article>
+        </main>
+    </div>
+
+    <footer class="footer-nav">
+        <a href="index.html" class="return-btn">RETURN TO MENU</a>
+    </footer>
+
+<script>
+    const MY_STORY = [ 
+        "<p class='d'>SAI: For that exact reason...</p><p class='d'>SAI: We need to hook The Individuals off the radar.</p><p>With his arms already slung around Andy, who couldn’t even bring himself to stand up while covering his face with his bandaged palms, Sai began slouching more comfortably on the dirty bench.</p><p class='d'>ANDY: ...Dude</p><p class='d'>ANDY: ...I</p><p class='d'>ANDY: What the fuck do I do..?</p><p>Kj and Sai turned their heads toward Andy simultaneously.</p><p>Andy returned the favour, his eyes on them with a confused and concerned expression. They both diverted their attention back to their previous activities. Kj to her phone and Sai to his expensive black loafers that he probably did not steal.</p><p class='d'>SAI: You can sleep here if you want.</p>",
+        "<p class='d'>ANDY: ...</p><p class='d'>SAI: ...Yeaaaaahhhh, you might have to find a job.</p><p>Andy's elbows dropped and his grip tightened. <em>A job? With no education? As an 'immigrant'? What's the paycheck even like?</em></p><p>How strange it was for Andy, retreating back inside, when nobody was seen except for Matt, who was just about done cleaning up the mess from earlier.</p><p>This birthday hurdle is done. Nobody seemingly care if he were to even die.</p><p>Nothing would change, that much was certain. Not crying or breaking down nor kicking the walls here until concrete powder gathered like spilled milk on the floor.</p><p>He's leaving.</p><p>Andy stopped short right in front of the door when someone called his name.</p><p class='d'>MATT: You leaving already?</p>",
+        "<p class='d'>MATT: Didn't even bother to say your greetings, huh?</p><p>The door swung open with a twist of the doorknob, one foot stepped outside.</p><p>And then both feet went completely airborne. Andy went flying for a second when Matt pulled him by his hair, slamming first-face into the floor right after.</p><p>Matt was clearly unappreciative of Andy’s lacklustre response — or perhaps the utter lack thereof. Matt rolled him over the beige carpet before hitting him right on his wound with the tip of the broom she was holding.</p><p>Kj and Sai watched from the kitchen.</p><p class='d'>MATT: And we were hoping you'd do something.</p><p class='d'>MATT: After all, you're kind of like the gum that holds Lego sets together.</p><p class='d'>MATT: Without you, it'll all just crumble.</p>",
+        "<p>Sai interrupted from over the kitchen, scoffing.</p><p class='d'>SAI: I've never seen Lego sets that use gum.</p><p>...</p><p>Matt's expression turned into that of an irritated Redditor, the parallel lying in how they'd look at you as if you were less than human for enunciating a word wrong.</p><p class='d'>MATT: You clearly haven't seen shit about Legos. No, actually, the Lego Movie. You know how basically the narrative changed because Emmet used the Piece of Resistance? That's literally gum. That's the whole point. The whole world was being Kragled together, which is LITERALLY GLUE, so actually I'm more right than I've ever been about anything in my entire life. And you standing over there fucking whatever you're fucking, you don't get to heckle me right now. You don't have that right. I have the moral high ground, I have the cinematic evidence, I have a whole Dreamworks, no wait, it's Warner Bros, I have a whole Warner Bros production backing my argument and you have NOTHING, Sai, you have absolutely nothing and you're a fucking NOBODY.</p>",
+        "<p class='d'>MATT: AND YOUUUU!</p><p>Andy had pushed himself up when the timing felt approppriate, sometime during the rant. He was clutching the area this lunatic bitch had hit just now, matter of fact, he did try sneaking off when he was down on the ground, crawling like he's a cockroach who just ate a pesticide.</p><p class='d'>MATT: I was eavesdropping on you three. I don't think you've got enough energy or motivation to clean up after this place to stay here to begin with!</p><p class='d'>ANDY: ...I wasn't even intending to.</p><p class='d'>MATT: Yeah, well, why don't you go rob a bank or something!? Then go buy a room somewhere in the countryside and fuck off for good if that's what you dream of so bad.</p>",
+        "<img src='image/03/1.jpg'>",
+        "<p class='d'>ANDY: This is a robbery.</p><p class='d'>ANDY: Get on the ground.</p><p>Everyone around seemed indifferent toward what was going on.</p><p>The bank teller was a middle-aged man in a blue suit with particularly unevenly trimmed facial hair. He was doing paperwork and signing documents, you know, all those legal things, when his elbow accidentally met his compact calculator. He crouched down to get it and only then took notice of the man in a ski mask, Andy, who stood crookedly in front of the glass pane.</p><p class='d'>BANK TELLER: Oh, sorry, I didn't notice you. What can I help you with?</p><p>Andy's body swayed a bit, and he couldn't say anything for a few seconds.</p><p class='d'>ANDY: ...This is a robbery.</p><p class='d'>BANK TELLER: What? Can you speak up a bit? I couldn't quite catch that.</p>",
+        "<p>This small, pathetic interaction had invited some unwanted stares from those around him, some even noticed the suspiciously shaped mask Andy had on. </p><p class='d'>ANDY: I... I said... that... this is a robbery...</p><p>Sai's fist closed around the back of Andy's hoodie before he could even fully process what had just happened, hauling him sideways and through the nearest door without a word.</p><p class='d'>SAI: You've gotten rusty dude, what the hell?</p><p class='d'>ANDY: Why the fuck does everyone keep dragging me around like I'm garbage that needs to be thrown out...</p><p class='d'>SAI: Stop moving.</p><p>They pressed flat between a cargo truck and a large rubbish bin shoved against the alley wall. The truck bed was loaded with boxes, stacks of unused documents bundled in plastic, and loose papers that had already started curling at the edges from the heat. Nobody came back here.</p>",
+        "<p>A blue sedan decelerated nearby, as if to get a closer look at the area, only for it to just speed up and leave without causing much afterthought.</p><p>...It smelled musty and woody, to say the least.</p><p>Sai pulled off his own ski mask first, then grabbed Andy's and yanked it off his head without warning, tossing it straight into the garbage bin that they used as a cover.</p><p class='d'>ANDY: Yeah, I'm not really sure about this...</p><p class='d'>SAI: Do it quietly. Don't wave a gun around. Don't announce it like you're doing a school presentation.</p><p class='d'>SAI: And uh...</p><p class='d'>SAI: Good luck.</p><p class='d'>ANDY: ...I announced it twice.</p><p class='d'>ANDY: He asked me to speak up.</p>",
+        "<p>From another perspective, a figure stumbled into frame. The screen flickered for a second or two and everything went pitch black after through the lens of the surveillance camera. Not that the one monitoring it was particularly competent to begin with.</p><p><em>Must be Sai's doing.</em></p><p>Soft whistling followed, then a gentle whoosh as the vent latch above swung itself open. A series of appendages reached down, signaling Andy to grab on.</p><p>It took him a while to navigate through the vents. Not unbearable though, the ventilation space was surprisingly spacious, at least by vent standards. Whether that was actually a good thing was another question entirely.</p><p><em>This must be the entrance of the vault.</em></p><p><em>A bunch of officers patrolling down there...</em></p><p><em>Is Sai even with me right now?</em></p><p>A cough came from behind him.</p><p>Good thing, his question was answered. Bad thing, a police officer hearing coughing from the vents is never anything good.</p>",
+        "<p>Their guns opened fire toward the vent shaft almost immediately.</p><p>Gunshots ringing out was obviously a sign that the ventilation shaft needed to be ditched. A cluster of limbs piled beneath Andy, tearing at the steel lining of the vent floor with their fingers until they bled.</p><p>The moment it cracked open, Andy brought himself down.</p>",
+        "<img src='image/03/2.jpg'>",
+        "<p>The objective was simple: don't let any more of those gunshots fire, then get straight to the vault.</p><p>Hands went flying all over the room, bouncing over the room all rubbery, or at least it seemed that way. One hand covered the muzzle of a gun, another snapped an officer's wrist before he could press on the trigger. Andy went for the other officer, landing a solid few punches that sent him stumbling back near the emergency fire alarm button.</p><p><Quivering, back against the wall with his hand just shy of the button, the officer mustered what was left of his strength and slammed his knuckle onto the red circle.</p><p>Only problem was that before he could move, his hand was already stuck, every limb grappled by ugly hands that had anticipated the move. Andy's immediate response was to drive his boot straight into the man's testicles. Three times minimum.</p><p>And for all the strikes, they rang out louder than any gunshot the officers had hoped to fire.</p><p>Foam fell in clusters down onto the man's wrinkly suit. He stumbled around the room, hands clutched around his broken jewellery before collapsing, his forehead catching the sharp edge of a nearby table. He was probably dead, though getting upset and emotional over a variable that could potentially ruin your plan was unprofessional.</p>",
+        "<p>Sai came down the crooked, dented vent shaft slowly. One hand clutched the exposed edge of the vent door before he landed on the floor properly, quietly impressed at what Andy had managed in such a short amount of time.</p><p>He gestured toward the vault entrance and Andy followed suit.</p><p>Everything else came easy. Seemingly advanced technological security died the moment Sai got near it.</p><p>How awfully convenient.</p><p>Andy sat at the vault entrance, fiddling with whatever built-in intrusion prevention system had been installed there. The focus was there. So was the struggle.</p><p class='d'>SAI: You still got it, honestly.</p><p class='d'>ANDY: ...Yeah?</p><p>The hinge of the vault sparked for a split second. Andy took a step back, lowering his beanie as he held his breath.</p><p>Nothing happened.</p>",
+        "<p class='d'>ANDY: I've been wondering why you're more casual about me robbing a bank than not attending your birthday party.</p><p class='d'>SAI: What do you mean?</p><p class='d'>ANDY: Like, aren't you afraid of us getting caught?</p><p>...</p><p class='d'>SAI: Stuff like that doesn't even matter.</p><p class='d'>SAI: And I'm more of a 'live in the present' typa guy after all.</p><p class='d'>ANDY: Same guy overthinking the future of this good-for-nothing gang.</p><p class='d'>SAI: Not a bad thing that I worry about your well-being.</p><p class='d'>SAI: I don't really care about the others though, if we're being honest.</p>",
+        "<p class='d'>SAI: There.</p><p>Andy, who had been watching Sai, was caught off guard when the vault door was simply gone. What remained was a cluster of raw, unassembled metal, laid out like toy components.</p><p class='d'>SAI: Consequences this, consequences that.</p><p>The first one to step into the vault was Sai. He grabbed a fat stack of cash and tossed it into his duffle bag. He sat down cross-legged, grabbed another stack, snapped off the band and tossed it upward, letting the bills fall down around him in chaotic harmony.</p><p class='d'>ANDY: You're acting pretty childish.</p><p>Sai stared at the fallen money on the floorboard while Andy was already gathering the duffel bags.</p>",
+        "<p>Somewhere around 2 PM, sunlight was gently pouring down onto a quiet neighborhood; in front of Sai's parked car, and the two idiots inside of it, sat a 100-square-foot apartment in surprisingly well-maintained condition.</p><p>Patiently, a woman in her thirties stood under the heat of the sun with a subtle smile, resting both her hands on her lap and holding documents streaked with her own sweat.</p><p>Because Andy and Sai were very nice, they had decided to keep the woman waiting by 'thinking this through' right then, instead of an hour or so prior to contacting the poor agent.</p><p class='d'>SAI: You sure about this?</p><p class='d'>ANDY: About what?</p><p class='d'>SAI: That.</p><p>Sai gestured toward the stacked, light-brown duffel bags sitting on the backseat, tipping over each other with a thick band of money already falling down onto the floor mat.</p><p>Andy took a moment to reconsider.</p>",
+        "<p class='d'>ANDY: It'll be fine.</p><p class='d'>ANDY: There might not be a point in going anonymous with the money.</p><p class='d'>ANDY: I'll just pay upfront.</p><p>Andy got up from his seat and left the car, apologetically waving and bowing at the lady for keeping her waiting.</p><p>It took quite a while. There was some chatter, paperwork Andy didn't know how to deal with, a little suspicion regarding the money, and a brief tour.</p><p>When early evening came, Sai, who had been asleep in the driver’s seat, was jolted awake by Andy knocking on the window.</p><p class='d'>ANDY: That's about it then.</p><p class='d'>ANDY: Thank you for getting me through this mess.</p><p>Sai put on the glasses he had set aside on the dashboard.</p>",
+        "<p class='d'>SAI: Wait, what?</p><p class='d'>SAI: You're talking as if you're leaving.</p><p class='d'>ANDY: But I am?</p><p class='d'>SAI: ...</p><p class='d'>ANDY: ...</p><p class='d'>SAI: I thought the part of the deal was we get you a house, then you come back to the Individuals.</p><p>Andy stood frozen, one hand still resting on the car's door frame. He glanced at his tiny new home, then back at Sai, who stared him down with his glasses sitting crookedly on the bridge of his nose.</p><p class='d'>SAI: We'll talk about this later.</p><p>Sai pulled out of the driveway and fucked off; he watched as Andy's figure, standing so stiff and sheepish, slowly shrank in the rearview mirror.</p>",
+        "<p>Sai reached for the radio’s power button and turned it on with a gentle press, letting the speakers play some upbeat girly pop hit.</p><p>Well, was he mad? Disappointed? Not really. Sai wasn't the type to get mad over how people acted nowadays.</p><p>He sucked in a deep breath to fight off the sensation of drowsiness; when that didn't work, he cranked the A/C to the max. The uncomfortably cold air would surely keep him alert now.</p><p>He stopped short of the white line when the traffic light flashed red.</p><p>...</p><p>A blue sedan stopped next to him.</p><p>It started with a single honk which Sai simply ignored at first; perhaps the driver's palm had accidentally brushed over the horn pad on the steering wheel. However, a second time, or rather, an aggressive, cascading barrage of honks that followed gave Sai the assumption that Andy had left something on the roof and the polite driver next to him was simply trying to warn him.</p><p>Sai rolled down the window and let his hand stick out, feeling his palm against the roof of his car for anything foreign.</p>",
+        "<p>The honking grew even more aggressive. With a subtle sense of frustration, Sai focused his eyes through the tinted glass of the car, finally getting a clear look at the driver.</p><p>Or rather, the lack of one. The relentless honking also miraculously stopped when Sai got a good look inside.</p><p class='d'>SAI: What kind of shitty horror movie am I in?</p>",
+        "<img src='image/03/3.jpg'>",
+        "<p class='d'>Did you learn a lesson?</p><p class='d'>Those loud, awful, and irritating honks are exactly how we perceive these criminal underground factions who think they can just do what they want without consequences.</p><p>Sai kneed his glovebox to let it drop open. He immediately snatched a loaded Desert Eagle sitting inside and pointed it at the man in the back.</p><p class='d'>MIGUEL: I'm Miguel, from the O.S.I.R.I.S.</p><p>He dropped the duffel bag and rested his hand on the headrest of Sai's seat, leaning slightly forward.</p><p class='d'>MIGUEL: Put your gun down.</p><p class='d'>MIGUEL: I'm only here to talk.</p><p>The traffic light flashed green.</p>",
+        "<p></p>",
+        "<img src='image/03/white.jpg'>",
+        "<img src='image/03/end.jpg'>"
+
+    ]; 
+    
+    let currentSpread = 0;
+
+    function updatePages() {
+        const lC = document.getElementById('L-C'), rC = document.getElementById('R-C');
+        const lP = document.getElementById('L-PAGE'), rP = document.getElementById('R-PAGE');
+        
+        const lData = MY_STORY[currentSpread * 2] || "";
+        const rData = MY_STORY[(currentSpread * 2) + 1] || "";
+        
+        lC.innerHTML = lData; 
+        rC.innerHTML = rData;
+
+        // Hide right page container if it's empty (odd number of total pages)
+        rP.style.display = rData === "" ? "none" : "flex";
+        
+        const hasImgL = lData.includes('<img');
+        const hasImgR = rData.includes('<img');
+
+        hasImgL ? lP.classList.add('no-padding') : lP.classList.remove('no-padding');
+        hasImgR ? rP.classList.add('no-padding') : rP.classList.remove('no-padding');
+
+        const isSpoilerOn = localStorage.getItem('spoiler-mode') === 'true';
+        
+        [lP, rP].forEach(page => {
+            page.classList.remove('revealed'); 
+            if (isSpoilerOn && page.classList.contains('no-padding')) {
+                page.classList.add('spoiler-active');
+            } else {
+                page.classList.remove('spoiler-active');
+            }
+        });
+        
+        window.scrollTo({ top: 0, behavior: 'smooth' }); 
+    }
+
+    function nextPage() { 
+        const rP = document.getElementById('R-PAGE');
+        // Handle spoiler reveal before page turn
+        if (rP.classList.contains('spoiler-active') && !rP.classList.contains('revealed')) {
+            rP.classList.add('revealed');
+            return;
+        }
+        if ((currentSpread + 1) * 2 < MY_STORY.length) { 
+            currentSpread++; 
+            updatePages(); 
+        } 
+    }
+
+    function prevPage() { 
+        const lP = document.getElementById('L-PAGE');
+        if (lP.classList.contains('spoiler-active') && !lP.classList.contains('revealed')) {
+            lP.classList.add('revealed');
+            return;
+        }
+        if (currentSpread > 0) { 
+            currentSpread--; 
+            updatePages(); 
+        } 
+    }
+
+    function updateRatio(val) {
+        document.documentElement.style.setProperty('--spread-ratio', val);
+        document.body.setAttribute('data-ratio', val); 
+        localStorage.setItem('individuals-ratio', val);
+    }
+
+    window.onload = () => {
+        if (localStorage.getItem('site-theme') === 'light') {
+            document.body.classList.add('light-theme');
+        }
+        const saved = localStorage.getItem('individuals-ratio') || "1.33";
+        document.getElementById('ratioSelect').value = saved;
+        updateRatio(saved);
+        updatePages();
+    };
+</script>
+</body>
+</html>
