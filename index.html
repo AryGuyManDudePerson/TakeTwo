@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>INDIVIDUALS: TAKE TWO</title>
+    <title>THE INDIVIDUALS: TAKE TWO</title>
     <style>
         :root {
             --bg: #121212;
@@ -113,6 +113,9 @@
     height: 14px; 
     margin-right: 15px; 
     background: var(--ch-color, var(--text));
+    flex-shrink: 0;        /* prevent it from squishing */
+    align-self: flex-start; /* pin it to the top */
+    margin-top: 2px;       /* optional: nudge to align with first line of text */
 }
 
 .chapter-btn:hover { 
@@ -149,21 +152,27 @@
 
     <ul class="menu-list">
         <li>
-            <a href="chapter1.html" class="chapter-btn ch-orange">
+            <a href="chapter1.html" class="chapter-btn ch-yellow">
                 <div class="icon"></div>
                 <span>CHAPTER 1: ANDY</span>
             </a>
         </li>
         <li>
-          <a href="chapter2.html" class="chapter-btn ch-red">
+          <a href="chapter2.html" class="chapter-btn ch-orange">
                 <div class="icon"></div>
                 <span>CHAPTER 2: HAPPY BIRTHDAY</span>
             </a>
         </li>
         <li>
-          <a href="chapter3.html" class="chapter-btn ch-yellow">
+          <a href="chapter3.html" class="chapter-btn ch-red">
                 <div class="icon"></div>
-                <span>CHAPTER 3: DISRUPTION OF CONSTANTNESS</span>
+                <span>CHAPTER 3: DISRUPTION OF WHAT WAS ONCE CONSTANT</span>
+            </a>
+        </li>
+         <li>
+          <a href="chapter4.html" class="chapter-btn ch-purple">
+                <div class="icon"></div>
+                <span>CHAPTER 4: YOU AND ME</span>
             </a>
         </li>
     </ul>

@@ -3,323 +3,221 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CHAPTER 01</title>
+    <title>CHAPTER1</title>
     <style>
-    :root { 
-        --bg: #0e0e0e; 
-        --page-bg: #151515; 
-        --white-raw: 255, 255, 255;
-        --spread-ratio: 1.33; 
-        --panel-bg: rgba(20, 20, 20, 0.95);
-        --border-color: #333;
-        --border-light: #222;
-        --input-bg: #000;
-        --text-main: #fff;
-    }
-
-    body.light-theme {
-        --bg: #e5e5e5; 
-        --page-bg: #ffffff; 
-        --white-raw: 0, 0, 0;
-        --panel-bg: rgba(255, 255, 255, 0.95);
-        --border-color: #ccc;
-        --border-light: #ddd;
-        --input-bg: #fff;
-        --text-main: #000;
-    }
-    
-    body { 
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-        background-color: var(--bg); 
-        margin: 0;
-        display: flex; 
-        flex-direction: column; 
-        align-items: center; 
-        min-height: 100vh;
-        color: var(--text-main);
-    }
-
-    /* --- Core Layout --- */
-    .book-container { 
-        width: 95%; 
-        max-width: 1400px; 
-        margin: 20px 0; 
-    }
-
-    .book-spread {
-        display: grid; 
-        grid-template-columns: 1fr 1fr; 
-        width: 100%;
-        aspect-ratio: var(--spread-ratio); 
-        background: var(--page-bg); 
-        border: 1px solid var(--border-light); 
-        position: relative; 
-        overflow: hidden;
-        transition: aspect-ratio 0.3s ease;
-    }
-
-    /* Middle Divider */
-    .book-spread::before { 
-        content: ""; 
-        position: absolute; 
-        left: 50%; top: 0; bottom: 0; 
-        width: 1px; 
-        background: var(--border-light);
-        z-index: 5; 
-    }
-
-    .page { 
-        position: relative; 
-        display: flex; 
-        flex-direction: column; 
-        height: 100%;
-        padding: 60px 80px; 
-        box-sizing: border-box;
-        overflow-y: auto; /* Allow internal scroll if text is huge */
-    }
-
-    /* --- Mobile Support (Vertical Stack) --- */
-    @media (max-width: 900px) {
-        .book-container { margin: 10px 0; width: 100%; }
-        
-        .book-spread {
-            grid-template-columns: 1fr; /* Stack pages */
-            aspect-ratio: auto !important; /* Kill forced ratio on mobile portrait */
-            height: auto;
-            border: none;
+        :root { --bg: #0e0e0e; --page-bg: #151515; --white-raw: 255, 255, 255; --spread-ratio: 1.33; --panel-bg: rgba(20, 20, 20, 0.95); --border-color: #333; --border-light: #222; --input-bg: #000; --text-main: #fff; }
+        body.light-theme { --bg: #e5e5e5; --page-bg: #ffffff; --white-raw: 0, 0, 0; --panel-bg: rgba(255, 255, 255, 0.95); --border-color: #ccc; --border-light: #ddd; --input-bg: #fff; --text-main: #000; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg); margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; color: var(--text-main); }
+        .book-container { width: 95%; max-width: 1400px; margin: 20px 0; }
+        .book-spread { display: grid; grid-template-columns: 1fr 1fr; width: 100%; aspect-ratio: var(--spread-ratio); background: var(--page-bg); border: 1px solid var(--border-light); position: relative; overflow: hidden; }
+        .book-spread::before { content: ""; position: absolute; left: 50%; top: 0; bottom: 0; width: 1px; background: var(--border-light); z-index: 5; }
+        .page { position: relative; display: flex; flex-direction: column; height: 100%; padding: 60px 80px; box-sizing: border-box; overflow: hidden; }
+        @media (max-width: 900px) {
+            .book-container { margin: 10px 0; width: 100%; }
+            .book-spread { grid-template-columns: 1fr; aspect-ratio: auto !important; height: auto; border: none; overflow: visible; }
+            .book-spread::before { display: none; }
+            .page { padding: 40px 25px; height: auto; min-height: 400px; border-bottom: 1px solid var(--border-light); }
+            .settings-panel { left: 0 !important; right: 0 !important; bottom: 0 !important; flex-direction: row !important; justify-content: space-between; width: 100%; border-left: none; border-right: none; padding: 15px 20px !important; box-sizing: border-box; }
+            .footer-nav { margin-bottom: 100px; }
         }
-
-        .book-spread::before { display: none; } /* Hide divider */
-
-        .page {
-            padding: 40px 25px;
-            height: auto;
-            min-height: 400px;
-            border-bottom: 1px solid var(--border-light);
+        @media (max-width: 900px) and (orientation: landscape) {
+            .book-spread { grid-template-columns: 1fr 1fr; aspect-ratio: var(--spread-ratio) !important; overflow: hidden; }
+            .book-spread::before { display: block; } .page { padding: 30px; }
         }
-
-        .settings-panel {
-            left: 0 !important; right: 0 !important; bottom: 0 !important;
-            flex-direction: row !important;
-            justify-content: space-between;
-            width: 100%;
-            border-left: none; border-right: none;
-            padding: 15px 20px !important;
-            box-sizing: border-box;
-        }
-
-        .footer-nav { margin-bottom: 100px; } /* Don't hide behind settings bar */
-    }
-
-    /* --- Landscape Support (Bring back the spread) --- */
-    @media (max-width: 900px) and (orientation: landscape) {
-        .book-spread {
-            grid-template-columns: 1fr 1fr;
-            aspect-ratio: var(--spread-ratio) !important;
-        }
-        .book-spread::before { display: block; }
-        .page { padding: 30px; }
-    }
-
-    /* --- Content Styling --- */
-    .content { width: 100%; height: 100%; }
-    .content p { font-size: 1.1rem; line-height: 1.7; margin-bottom: 20px; color: rgba(var(--white-raw), 0.8); }
-    .d { display: flex !important; background: rgba(var(--white-raw), 0.05); padding: 12px; border-radius: 4px; margin-bottom: 20px; font-weight: 500;}
-    .d::before { content: ""; min-width: 4px; height: 1.2rem; background: rgba(var(--white-raw), 0.4); margin-right: 12px; }
-
-    .no-padding { padding: 0 !important; }
-    .no-padding img { width: 100%; height: 100%; display: block; object-fit: cover; }
-
-    /* --- UI Components --- */
-    .settings-panel {
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
-        z-index: 100;
-        background: var(--panel-bg);
-        backdrop-filter: blur(8px);
-        padding: 12px;
-        border: 1px solid var(--border-color);
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-        font-size: 10px;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-    }
-    
-    select {
-        background: var(--input-bg);
-        color: var(--text-main);
-        border: 1px solid var(--border-color);
-        padding: 8px;
-        cursor: pointer;
-        outline: none;
-    }
-
-    .nav-zone { position: absolute; top: 0; bottom: 0; width: 40%; z-index: 10; cursor: pointer; }
-    .left-zone { left: 0; } .right-zone { right: 0; }
-
-    .footer-nav { margin: 20px 0 60px 0; z-index: 10; }
-    .return-btn { 
-        text-decoration: none; 
-        color: rgba(var(--white-raw), 0.5); 
-        font-size: 12px; 
-        letter-spacing: 2px;
-        padding: 12px 25px;
-        border: 1px solid var(--border-color);
-        transition: 0.3s;
-    }
-    .return-btn:hover { background: var(--text-main); color: var(--bg); }
-
-    /* Spoiler System */
-    .spoiler-active img { filter: blur(60px) grayscale(1); transition: 0.3s; }
-    .revealed img { filter: blur(0) grayscale(0) !important; }
-    .spoiler-active:not(.revealed)::after {
-        content: "SPOILER: CLICK TO REVEAL";
-        position: absolute;
-        top: 50%; left: 50%;
-        transform: translate(-50%, -50%);
-        background: rgba(0,0,0,0.9);
-        color: white;
-        padding: 12px 20px;
-        font-size: 11px;
-        letter-spacing: 2px;
-        z-index: 20;
-        pointer-events: none;
-        border: 1px solid #555;
-    }
-</style>
+        .content { width: 100%; height: 100%; overflow: hidden; }
+        .content p { font-size: 1.1rem; line-height: 1.7; margin-bottom: 20px; color: rgba(var(--white-raw), 0.8); }
+        .d { display: flex !important; background: rgba(var(--white-raw), 0.05); padding: 12px; border-radius: 4px; margin-bottom: 20px; font-weight: 500; }
+        .d::before { content: ""; min-width: 4px; height: 1.2rem; background: rgba(var(--white-raw), 0.4); margin-right: 12px; }
+        .no-padding { padding: 0 !important; }
+        .no-padding img { width: 100%; height: 100%; display: block; object-fit: cover; }
+        .settings-panel { position: fixed; bottom: 20px; right: 20px; z-index: 100; background: var(--panel-bg); backdrop-filter: blur(8px); padding: 12px; border: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 8px; font-size: 10px; text-transform: uppercase; letter-spacing: 1px; }
+        select { background: var(--input-bg); color: var(--text-main); border: 1px solid var(--border-color); padding: 8px; cursor: pointer; outline: none; }
+        .nav-zone { position: absolute; top: 0; bottom: 0; width: 40%; z-index: 10; cursor: pointer; }
+        .left-zone { left: 0; } .right-zone { right: 0; }
+        .footer-nav { margin: 20px 0 60px 0; z-index: 10; }
+        .return-btn { text-decoration: none; color: rgba(var(--white-raw), 0.5); font-size: 12px; letter-spacing: 2px; padding: 12px 25px; border: 1px solid var(--border-color); transition: 0.3s; }
+        .return-btn:hover { background: var(--text-main); color: var(--bg); }
+        .spoiler-active img { filter: blur(60px) grayscale(1); transition: 0.3s; }
+        .revealed img { filter: blur(0) grayscale(0) !important; }
+        .spoiler-active:not(.revealed)::after { content: "SPOILER: CLICK TO REVEAL"; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.9); color: white; padding: 12px 20px; font-size: 11px; letter-spacing: 2px; z-index: 20; pointer-events: none; border: 1px solid #555; }
+        #sandbox { position: fixed; visibility: hidden; top: -9999px; left: -9999px; overflow: hidden; }
+    </style>
 </head>
-    
 <body>
-
     <div class="settings-panel">
         <span>SPREAD RATIO:</span>
         <select id="ratioSelect" onchange="updateRatio(this.value)">
             <option value="1.33">4:3 (Default)</option>
             <option value="1.5">3:2</option>
             <option value="1.25">5:4</option>
-            <option value="1.77">16:9 (Letterboxed)</option>
         </select>
     </div>
-
+    <div id="sandbox"></div>
     <div class="book-container">
-        <main class="book-spread">
+        <main class="book-spread" id="spreadElement">
             <div class="nav-zone left-zone" onclick="prevPage()"></div>
             <div class="nav-zone right-zone" onclick="nextPage()"></div>
-            <article class="page" id="L-PAGE"><div class="content" id="L-C"></div></article>
-            <article class="page" id="R-PAGE"><div class="content" id="R-C"></div></article>
+            <div id="spread-content-area" style="display: contents;"></div>
         </main>
     </div>
-
-    <footer class="footer-nav">
-        <a href="index.html" class="return-btn">RETURN TO MENU</a>
-    </footer>
-
+    <footer class="footer-nav"><a href="index.html" class="return-btn">RETURN TO MENU</a></footer>
 <script>
-      const MY_STORY = [ 
-         "<img src='image/01/1.jpg'>",
-        "<img src='image/01/2.jpg'>",
-        "<img src='image/01/3.jpg'>",
-        "<img src='image/01/4.jpg'>",
-        "<img src='image/01/5.jpg'>",
-        "<img src='image/01/6.jpg'>",
-        "<img src='image/01/seven.jpg'>",
-        "<p>As you can see, our beloved Andy is currently taped to the front of a truck going at 100 km/h.</p><p>This is definitely far superior to any alarm clock you can find at IKEA.</p><p class='d'>ANDY: Whar.</p><p>It took Andy a solid 12 seconds and a flying sheet of a wanted poster of a literal nobody criminal scum to hit his face before he even realized what was going on.</p><p class='d'>ANDY: YO WHHHAAAAT TTTHHHHHHHHHHEEEEEEEEEEEEEEEE FUUUCCCCCCCCCCKKKKKKKKKKKKKKKKK</p><p class='d'>ANDY: YOU TORTILLA LOOKING ASS PUT ME DOWN RIIIGHHTT NOOOOOWWWWWW</p><p>Andy felt... absolutely terrible. No way he got done like that in his sleep. Like, sure, he sleeps like a corpse, but being taped to the front of a truck and still not waking up has surely got to be a side effect of sleep deprivation from all those late-night gaming sessions.</p>",
-        "<p>Eitherway, the truck driver, a hideous man with a mohawk and black tattoo imprints plastered all over his face, had his jaw unhinged the entire time. His eyes weren't even focused on the road, he was screaming in ecstasy like a drug addict finding a bag of heroin.</p><p class='d'>BIG CATCH, BIG CATCH, A BIG HIT OF THE UNDERWORLD IS TAPED TO THE FRONT OF A TRUCK!!!</p><p>He slammed his palm on the steering wheel several times as his right foot press harder on the accelerator pedal of the truck.</p><p class='d'>HAHAHAH THIS WAR IS SO FUN!!!</p><p>Without remorse, the truck rams over a few cars in front including a small hatchback, a family SUV, and another hatchback with a probationary sticker on the back window. Andy, who was taped to the front of the truck, managed to survive getting crushed by all three cars. A bunch of skinless hands, functioning as impact cushions, slipped down from his body.</p>",
-        "<p>The tape restraining Andy and plastering him to the bumper of the truck began to come loose from the crash.</p><p> He wiggled his body around, finally causing the tape to tear apart. Andy went flying to the side of the truck, he was already braced for the landing on rough asphalt when the driver's hand caught him by the wrist, causing the bandages on Andy's arm to slide down by a modicum.</p><p>The driver stuck his head—and tongue—out the window, maintaining eye contact with Andy through the side mirror, screaming with pure cockiness in his tone.</p><p class='d'>BY CLAIMING THAT PRICE TAG ON YOUR HEAD, 'WE,' AND I MEAN OUR ENTTIIIREEEE FAAACTION WILL BE ABLE TO LIVE WITHOUT WORRY FOREVER! WE'LL HAVE EVERYTHING!!! EEEVERYTTHIINNGGGG!!!!!!!!!'<p>Andy's face crumpled into a look of fear and sheer disgust.</p>",
-        "<p class='d'>ANDY: I just want to live a normal life! Why do you guys always come and ruin it!?!!!</p><p>The driver looked at Andy's reflection in the side mirror for a second, then he adjusted the mirror and burst out laughing.</p><p>At that exact moment, a pair of skinless hands emerged from the gearbox and slowly hopped towards the brake pedal and the accelerator.</p><p><strong>SLAM.</strong></p><p>The truck came to an abrupt stop, moved forward once again, stopped, and moved again for a bit. Two hands were visibly seen stomping and bouncing on both the brake pedal and accelerator in a motion similar to juggling a ball.</p><p>The truck was in a chaotic state. The driver lost his grip on Andy’s hand as he took notice of these cheeky entities, stomping down on both of them until they were nothing more than steaming chunks of ruined flesh, surprisingly more scared of the truck's condition than of seeing literal ugly hands walking around.</p>",
-        "<p>Chunks of Andy's sleeve, his bandages, and his already fucked up hand ripped off when he bounced off the asphalt. He pushed through the awful pain and clutched onto the back bumper of the truck.</p><p>Mister driver right here looked at the side mirror and couldn't see Andy's corpse laying on the road.</p><p class='d'>HEY! Get your asses off of the roof and check the trailer! Useless fucking tards!</p><p>One of the three men punched another's elbow lightly after he pointed towards the trailer and the other person took a step back as he whipped his pistol out.</p><p>One of them, the one with a ski mask, swung into the trailer. He hopped off and grabbed the top hood thingy so he wouldn't get wrecked by the momentum. He hopped in the trailer and the first thing he saw was a bunch of skinless hands taped to the walls inside like an infestation of cockroaches.</p><p>He pulled out his weapon immediately in shock, doing his best to stay far away from the walls.</p>",
-        "<p>From behind him, Andy was already winding up a punch. The initial swing seemed to be dodged though Andy did not stop attacking. He sent a left jab twice that couldn't connect and a right hook that actually landed. The man tried whipping his pistol in a crescent motion but Andy tilted his body back. The man fired a shot, two actually, but Andy dodged both of them and delivered a punishing punch that sent him staggering back, chained with an onslaught of jabs and punches to pressure the man against the wall.</p><p>When the man finally got too close to the adjacent wall, the hands sitting dormant leeched onto his throat and restrained him, pressing in deeper and deeper until the fingers punctured his neck, causing blood to spill with no signs of stopping.</p><p>Then another challenger appeared from behind Andy. One hand went flying and slammed his head onto the wall, straight up crushing his skull.</p><p>Gunshots came from above. There was one more guy right there.</p>",
-        "<p><em>He's trying to play it safe...</em></p><p>Thumping and the sound of a body dropping from the trailer was heard not long after, as a patch of skinless hands from the walls had already disappeared. Moved.</p><p>Andy let out a gruff exhale.</p><p>His body swayed lightly and he clutched onto his naked, bleeding hand, whispering under his breath.</p><p class='d'>ANDY: Fuck this... I just want a normal life, I just want a normal life, I just want a normal life, I just want a normal life...</p><p>The truck was speeding up, even going airborne for a split second.</p>",
-        "<p><strong>A supernatural, diverse phenomenon amongst individuals, something that is caused by one's forcibly altered biology and a mystical touch.</strong></p><p><strong>Only in ≈0.008–0.05% of individuals, a spontaneous genomic variance results in a strange combination of genes.</strong></p><p><strong>An otherworldly disturbance would visit those who die unsatisfactorily.</strong></p><p><strong>Resulting in what is known as <em>'Oddities'</em>.</strong></p>",
-        "<img src='image/01/8.jpg'>",
-        "<img src='image/01/9.jpg'>",
-        "<p><em>Fool's Loophole</em> rushed towards Andy, enveloping him in a defensive cocoon and would soon splatter outward when he tumbled on the ground.</p><p>He came out unscathed for the most part. The only injuries worth accounting for were the torn skin and ringing ears if those even counted, and maybe the fact that there were three trucks through his eyes, at least, slowly converging as his vision steadied back together.</p><p>He pushed himself forward using his forearms instead, coughing off dust as he took gentle steps towards his beanie that had gone flying and landed in between two pieces of large rubble.</p><p><em>This is how it should be.</em></p><p><em>So don't apologize anymore.</em></p><p>He straightened up before sucking in air through his nose and mouth until it felt satisfactory.</p>",
-        "<img src='image/01/10.jpg'>",
-        "<p>Andy was flipping off the crowd of cars stacked in front of him without realizing it, but even if he did become aware of it, he wouldn't give a shit. He'd had enough of his inner harmony being violated without consent.</p><p>One of the car honks stood out. A familiar voice called after him.</p><p class='d'> YOO</p><p>Andy looked over where the voice came from. There was a dude in office attire, wearing those unremarkable one-sided glasses along with a curtain cut.</p>",
-        "<img src='image/01/11.jpg'>",
-        "<img src='image/01/12.jpg'>",
-        "<img src='image/01/white.jpg'>",
-        "<img src='image/01/thanks.jpg'>"
-    ];
-    
+    const PARSED_ELEMENTS = [{"type":"single-img","url":"image\\01\\1.jpg"},{"type":"single-img","url":"image\\01\\2.jpg"},{"type":"single-img","url":"image\\01\\3.jpg"},{"type":"single-img","url":"image\\01\\4.jpg"},{"type":"single-img","url":"image\\01\\5.jpg"},{"type":"single-img","url":"image\\01\\6.jpg"},{"type":"single-img","url":"image\\01\\seven.jpg"},{"type":"text","data":"<p>As you can see, our beloved Andy is currently taped to the front of a truck going at 100 km/h.</p>"},{"type":"text","data":"<p>This is definitely far superior to any alarm clock you can find at IKEA.</p>"},{"type":"text","data":"<p class=\"d\">ANDY: Whar.</p>"},{"type":"text","data":"<p>It took Andy a solid 12 seconds and a flying sheet of a wanted poster of a literal nobody criminal scum to hit his face before he even realized what was going on.</p>"},{"type":"text","data":"<p class=\"d\">ANDY: YO WHHHAAAAT TTTHHHHHHHHHHEEEEEEEEEEEEEEEE FUUUCCCCCCCCCCKKKKKKKKKKKKKKKKK</p>"},{"type":"text","data":"<p class=\"d\">ANDY: YOU TORTILLA LOOKING ASS PUT ME DOWN RIIIGHHTT NOOOOOWWWWWW</p>"},{"type":"text","data":"<p>Andy felt... absolutely terrible. No way he got done like that in his sleep. Like, sure, he sleeps like a corpse, but being taped to the front of a truck and still not waking up has surely got to be a side effect of sleep deprivation from all those late-night gaming sessions.</p>"},{"type":"text","data":"<p>Eitherway, the truck driver, a hideous man with a mohawk and black tattoo imprints plastered all over his face, had his jaw unhinged the entire time. His eyes weren't even focused on the road, he was screaming in ecstasy like a drug addict finding a bag of heroin.</p>"},{"type":"text","data":"<p><strong>“BIG CATCH, BIG CATCH, A BIG HIT OF THE UNDERWORLD IS TAPED TO THE FRONT OF A TRUCK!!!”</strong></p>"},{"type":"text","data":"<p>He slammed his palm on the steering wheel several times as his right foot press harder on the accelerator pedal of the truck.</p>"},{"type":"text","data":"<p><strong>“HAHAHAH THIS WAR IS SO FUN!!!”</strong></p>"},{"type":"text","data":"<p>Without remorse, the truck rams over a few cars in front including a small hatchback, a family SUV, and another hatchback with a probationary sticker on the back window. Andy, who was taped to the front of the truck, managed to survive getting crushed by all three cars. A bunch of skinless hands, functioning as impact cushions, slipped down from his body.</p>"},{"type":"text","data":"<p>The tape restraining Andy and plastering him to the bumper of the truck began to come loose from the crash.</p>"},{"type":"text","data":"<p>He wiggled his body around, finally causing the tape to tear apart. Andy went flying to the side of the truck, he was already braced for the landing on rough asphalt when the driver's hand caught him by the wrist, causing the bandages on Andy's arm to slide down by a modicum.</p>"},{"type":"text","data":"<p>The driver stuck his head—and tongue—out the window, maintaining eye contact with Andy through the side mirror, screaming with pure cockiness in his tone.</p>"},{"type":"text","data":"<p><strong>“BY CLAIMING THAT PRICE TAG ON YOUR HEAD, 'WE,' AND I MEAN OUR ENTTIIIREEEE FAAACTION WILL BE ABLE TO LIVE WITHOUT WORRY FOREVER! WE'LL HAVE EVERYTHING!!! EEEVERYTTHIINNGGGG!!!!!!!!!”</strong></p>"},{"type":"text","data":"<p>Andy's face crumpled into a look of fear and sheer disgust.</p>"},{"type":"text","data":"<p class=\"d\">ANDY: I just want to live a normal life! Why do you guys always come and ruin my fucking peace-bubble!?!!!</p>"},{"type":"text","data":"<p>The driver looked at Andy's reflection in the side mirror for a second, then he adjusted the mirror and burst out laughing.</p>"},{"type":"text","data":"<p>At that exact moment, a pair of skinless hands emerged from the gearbox and slowly hopped towards the brake pedal and the accelerator.</p>"},{"type":"text","data":"<p><strong>SLAM.</strong></p>"},{"type":"text","data":"<p>The truck came to an abrupt stop, moved forward once again, stopped, and moved again for a bit. Two hands were visibly seen stomping and bouncing on both the brake pedal and accelerator in a motion similar to juggling a ball.</p>"},{"type":"text","data":"<p>The truck was in a chaotic state. The driver lost his grip on Andy’s hand as he took notice of these cheeky entities, stomping down on both of them until they were nothing more than steaming chunks of ruined flesh, surprisingly more scared of the truck's condition than of seeing literal ugly hands walking around.</p>"},{"type":"text","data":"<p>Chunks of Andy's sleeve, his bandages, and his already fucked up hand ripped off when he bounced off the asphalt. He pushed through the awful pain and clutched onto the back bumper of the truck.</p>"},{"type":"text","data":"<p>Mister driver right here looked at the side mirror and couldn't see Andy's corpse laying on the road.</p>"},{"type":"text","data":"<p><strong>“HEY! Get your asses off of the roof and check the trailer! Useless fucking tards!”</strong></p>"},{"type":"text","data":"<p>One of the three men punched another's elbow lightly after he pointed towards the trailer and the other person took a step back as he whipped his pistol out.</p>"},{"type":"text","data":"<p>One of them, the one with a ski mask, swung into the trailer. He hopped off and grabbed the top hood thingy so he wouldn't get wrecked by the momentum. He hopped in the trailer and the first thing he saw was a bunch of skinless hands taped to the walls inside like an infestation of cockroaches.</p>"},{"type":"text","data":"<p>He pulled out his weapon immediately in shock, doing his best to stay far away from the walls.</p>"},{"type":"text","data":"<p>From behind him, Andy was already winding up a punch. The initial swing seemed to be dodged though Andy did not stop attacking. He sent a left jab twice that couldn't connect and a right hook that actually landed. The man tried whipping his pistol in a crescent motion but Andy tilted his body back. The man fired a shot, two actually, but Andy dodged both of them and delivered a punishing punch that sent him staggering back, chained with an onslaught of jabs and punches to pressure the man against the wall.</p>"},{"type":"text","data":"<p>When the man finally got too close to the adjacent wall, the hands sitting dormant leeched onto his throat and restrained him, pressing in deeper and deeper until the fingers punctured his neck, causing blood to spill with no signs of stopping.</p>"},{"type":"text","data":"<p>Then another challenger appeared from behind Andy. One hand went flying and slammed his head onto the wall, straight up crushing his skull.</p>"},{"type":"text","data":"<p>Gunshots came from above. There was one more guy right there.</p>"},{"type":"text","data":"<p><em>He's trying to play it safe...</em></p>"},{"type":"text","data":"<p>Thumping and the sound of a body dropping from the trailer was heard not long after, as a patch of skinless hands from the walls had already disappeared. Moved.</p>"},{"type":"text","data":"<p>Andy let out a gruff exhale.</p>"},{"type":"text","data":"<p>His body swayed lightly and he clutched onto his naked, bleeding hand, whispering under his breath.</p>"},{"type":"text","data":"<p class=\"d\">ANDY: Fuck this... I just want a normal life, I just want a normal life, I just want a normal life, I just want a normal life...</p>"},{"type":"text","data":"<p>The truck was speeding up, even going airborne for a split second.</p>"},{"type":"text","data":"<p><strong> A supernatural, diverse phenomenon amongst individuals, something that is caused by one's forcibly altered biology and a mystical touch. </strong></p>"},{"type":"text","data":"<p><strong> Only in ≈0.008–0.05% of individuals, a spontaneous genomic variance results in a strange combination of genes. </strong></p>"},{"type":"text","data":"<p><strong> An otherworldly disturbance would visit those who die unsatisfactorily. </strong></p>"},{"type":"text","data":"<p><strong> Resulting in what is known as 'Oddities'.</strong></p>"},{"type":"single-img","url":"image\\01\\8.jpg"},{"type":"single-img","url":"image\\01\\9.jpg"},{"type":"text","data":"<p><em>Fool's Loophole</em> rushed towards Andy, enveloping him in a defensive cocoon and would soon splatter outward when he tumbled on the ground.</p>"},{"type":"text","data":"<p>He came out unscathed for the most part. The only injuries worth accounting for were the torn skin and ringing ears if those even counted, and maybe the fact that there were three trucks through his eyes, at least, slowly converging as his vision steadied back together.</p>"},{"type":"text","data":"<p>He pushed himself forward using his forearms instead, coughing off dust as he took gentle steps towards his beanie that had gone flying and landed in between two pieces of large rubble.</p>"},{"type":"text","data":"<p>This is how it should be.</p>"},{"type":"text","data":"<p>So don't apologize anymore.</p>"},{"type":"text","data":"<p>He straightened up before sucking in air through his nose and mouth until it felt satisfactory.</p>"},{"type":"single-img","url":"image\\01\\10.jpg"},{"type":"text","data":"<p>Andy was flipping off the crowd of cars stacked in front of him without realizing it, but even if he did become aware of it, he wouldn't give a shit. He'd had enough of his inner harmony being violated without consent.</p>"},{"type":"text","data":"<p>One of the car honks stood out. A familiar voice called after him.</p>"},{"type":"text","data":"<p><strong>“YOO”</strong></p>"},{"type":"text","data":"<p>Andy looked over where the voice came from. There was a dude in office attire, wearing those unremarkable one-sided glasses along with a curtain cut.</p>"},{"type":"single-img","url":"image\\01\\11.jpg"},{"type":"single-img","url":"image\\01\\12.jpg"},{"type":"paired-double","left":"image\\01\\white.jpg","right":"image\\01\\thanks.jpg"}];
+    let PAGINATED_PAGES = [];
     let currentSpread = 0;
 
-    function updatePages() {
-        const lC = document.getElementById('L-C'), rC = document.getElementById('R-C');
-        const lP = document.getElementById('L-PAGE'), rP = document.getElementById('R-PAGE');
-        
-        const lData = MY_STORY[currentSpread * 2] || "";
-        const rData = MY_STORY[(currentSpread * 2) + 1] || "";
-        
-        lC.innerHTML = lData; 
-        rC.innerHTML = rData;
+    function reflowContent() {
+        if (PARSED_ELEMENTS.length === 0) return;
 
-        // Hide right page container if it's empty (odd number of total pages)
-        rP.style.display = rData === "" ? "none" : "flex";
-        
-        const hasImgL = lData.includes('<img');
-        const hasImgR = rData.includes('<img');
+        if (window.innerWidth <= 900 && window.innerHeight > window.innerWidth) {
+            PAGINATED_PAGES = [];
+            let blockBuffer = "";
+            PARSED_ELEMENTS.forEach(el => {
+                if (el.type === 'paired-double') {
+                    if (blockBuffer !== "") { PAGINATED_PAGES.push({ type: 'text', data: blockBuffer }); blockBuffer = ""; }
+                    PAGINATED_PAGES.push({ type: 'single', data: '<img src="' + el.left + '">' });
+                    PAGINATED_PAGES.push({ type: 'single', data: '<img src="' + el.right + '">' });
+                } else if (el.type === 'single-img') {
+                    if (blockBuffer !== "") { PAGINATED_PAGES.push({ type: 'text', data: blockBuffer }); blockBuffer = ""; }
+                    PAGINATED_PAGES.push({ type: 'single', data: '<img src="' + el.url + '">' });
+                } else {
+                    blockBuffer += el.data || el;
+                }
+            });
+            if (blockBuffer !== "") PAGINATED_PAGES.push({ type: 'text', data: blockBuffer });
+            currentSpread = 0;
+            updateUI();
+            return;
+        }
 
-        hasImgL ? lP.classList.add('no-padding') : lP.classList.remove('no-padding');
-        hasImgR ? rP.classList.add('no-padding') : rP.classList.remove('no-padding');
+        const bookSpread = document.querySelector('.book-spread');
+        const spreadWidth = bookSpread.clientWidth;
+        if (!spreadWidth || spreadWidth === 0) { requestAnimationFrame(() => reflowContent()); return; }
 
-        const isSpoilerOn = localStorage.getItem('spoiler-mode') === 'true';
-        
-        [lP, rP].forEach(page => {
-            page.classList.remove('revealed'); 
-            if (isSpoilerOn && page.classList.contains('no-padding')) {
-                page.classList.add('spoiler-active');
+        const ratio = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--spread-ratio')) || 1.33;
+        const spreadHeight = spreadWidth / ratio;
+        const targetWidth = (spreadWidth / 2) - 1;
+        const pageHeight = spreadHeight - 2;
+
+        const sandbox = document.getElementById('sandbox');
+        sandbox.innerHTML = '<article class="page" style="width:' + targetWidth + 'px; height:' + pageHeight + 'px; padding:60px 80px; box-sizing:border-box; overflow:hidden;"><div class="content" id="sand-c" style="width:100%; height:100%; overflow:hidden;"></div></article>';
+        const sandC = document.getElementById('sand-c');
+        const maxHeight = sandC.offsetHeight;
+
+        if (!maxHeight || maxHeight === 0) {
+            sandbox.innerHTML = "";
+            requestAnimationFrame(() => reflowContent());
+            return;
+        }
+
+        PAGINATED_PAGES = [];
+        let currentPageBuffer = "";
+
+        function flushTextBuffer() {
+            if (currentPageBuffer !== "") {
+                PAGINATED_PAGES.push({ type: 'text', data: currentPageBuffer });
+                currentPageBuffer = "";
+            }
+        }
+
+        PARSED_ELEMENTS.forEach(element => {
+            if (element.type === 'paired-double') {
+                flushTextBuffer();
+                if (PAGINATED_PAGES.length % 2 !== 0) PAGINATED_PAGES.push({ type: 'empty', data: "" });
+                PAGINATED_PAGES.push({ type: 'single', data: '<img src="' + element.left + '">' });
+                PAGINATED_PAGES.push({ type: 'single', data: '<img src="' + element.right + '">' });
+                return;
+            }
+            if (element.type === 'single-img') {
+                flushTextBuffer();
+                PAGINATED_PAGES.push({ type: 'single', data: '<img src="' + element.url + '">' });
+                return;
+            }
+            let inlineMarkup = element.data;
+            sandC.innerHTML = currentPageBuffer + inlineMarkup;
+            if (sandC.scrollHeight > maxHeight && currentPageBuffer !== "") {
+                PAGINATED_PAGES.push({ type: 'text', data: currentPageBuffer });
+                currentPageBuffer = inlineMarkup;
             } else {
-                page.classList.remove('spoiler-active');
+                currentPageBuffer += inlineMarkup;
             }
         });
-        
-        window.scrollTo({ top: 0, behavior: 'smooth' }); 
+
+        flushTextBuffer();
+        sandbox.innerHTML = "";
+        currentSpread = 0;
+        updateUI();
     }
 
-    function nextPage() { 
-        const rP = document.getElementById('R-PAGE');
-        // Handle spoiler reveal before page turn
-        if (rP.classList.contains('spoiler-active') && !rP.classList.contains('revealed')) {
-            rP.classList.add('revealed');
-            return;
+    function updateUI() {
+        const container = document.getElementById('spread-content-area');
+        container.innerHTML = "";
+        if (PAGINATED_PAGES.length === 0) return;
+        const isMobileView = window.innerWidth <= 900 && window.innerHeight > window.innerWidth;
+        const bookSpreadElement = document.getElementById('spreadElement');
+        if (isMobileView) {
+            bookSpreadElement.style.display = "block"; bookSpreadElement.style.border = "none";
+            const currentItem = PAGINATED_PAGES[currentSpread]; if (!currentItem) return;
+            if (currentItem.type === 'single') { container.innerHTML = '<article class="page no-padding">' + currentItem.data + '</article>'; }
+            else { container.innerHTML = '<article class="page"><div class="content">' + currentItem.data + '</div></article>'; }
+            handleSpoilerState(container); return;
         }
-        if ((currentSpread + 1) * 2 < MY_STORY.length) { 
-            currentSpread++; 
-            updatePages(); 
-        } 
+        bookSpreadElement.style.display = "grid"; bookSpreadElement.style.border = "1px solid var(--border-light)";
+        const leftIndex = currentSpread * 2; const rightIndex = leftIndex + 1;
+        const leftPageData = PAGINATED_PAGES[leftIndex]; const rightPageData = PAGINATED_PAGES[rightIndex];
+        let leftHtml = "";
+        if (leftPageData) {
+            if (leftPageData.type === 'single') leftHtml = '<article class="page no-padding" id="L-PAGE">' + leftPageData.data + '</article>';
+            else if (leftPageData.type === 'text') leftHtml = '<article class="page" id="L-PAGE"><div class="content">' + leftPageData.data + '</div></article>';
+            else leftHtml = '<article class="page" id="L-PAGE"></article>';
+        } else { leftHtml = '<article class="page" id="L-PAGE"></article>'; }
+        let rightHtml = "";
+        if (rightPageData) {
+            if (rightPageData.type === 'single') rightHtml = '<article class="page no-padding" id="R-PAGE">' + rightPageData.data + '</article>';
+            else if (rightPageData.type === 'text') rightHtml = '<article class="page" id="R-PAGE"><div class="content">' + rightPageData.data + '</div></article>';
+            else rightHtml = '<article class="page" id="R-PAGE"></article>';
+        } else { rightHtml = '<article class="page" id="R-PAGE" style="display:none;"></article>'; }
+        container.innerHTML = leftHtml + rightHtml;
+        handleSpoilerState(container);
     }
 
-    function prevPage() { 
-        const lP = document.getElementById('L-PAGE');
-        if (lP.classList.contains('spoiler-active') && !lP.classList.contains('revealed')) {
-            lP.classList.add('revealed');
-            return;
-        }
-        if (currentSpread > 0) { 
-            currentSpread--; 
-            updatePages(); 
-        } 
+    function handleSpoilerState(container) {
+        const isSpoilerOn = localStorage.getItem('spoiler-mode') === 'true';
+        const pages = container.querySelectorAll('.page');
+        pages.forEach(page => {
+            if (isSpoilerOn && page.classList.contains('no-padding')) {
+                page.classList.add('spoiler-active');
+                page.onclick = (e) => { if (page.classList.contains('spoiler-active') && !page.classList.contains('revealed')) { e.stopPropagation(); page.classList.add('revealed'); } };
+            }
+        });
     }
+
+    function nextPage() {
+        const isMobileView = window.innerWidth <= 900 && window.innerHeight > window.innerWidth;
+        const activeSpoiler = document.querySelector('.spoiler-active:not(.revealed)');
+        if (activeSpoiler) { activeSpoiler.classList.add('revealed'); return; }
+        if (isMobileView) { if (currentSpread + 1 < PAGINATED_PAGES.length) { currentSpread++; updateUI(); window.scrollTo({ top: 0 }); } }
+        else { if ((currentSpread + 1) * 2 < PAGINATED_PAGES.length) { currentSpread++; updateUI(); window.scrollTo({ top: 0 }); } }
+    }
+
+    function prevPage() { if (currentSpread > 0) { currentSpread--; updateUI(); window.scrollTo({ top: 0 }); } }
 
     function updateRatio(val) {
+        if (val !== "1.33" && val !== "1.5" && val !== "1.25") val = "1.33";
         document.documentElement.style.setProperty('--spread-ratio', val);
-        document.body.setAttribute('data-ratio', val); 
+        document.body.setAttribute('data-ratio', val);
         localStorage.setItem('individuals-ratio', val);
+        setTimeout(() => reflowContent(), 100);
     }
 
+    window.addEventListener('resize', () => setTimeout(() => reflowContent(), 100));
+
     window.onload = () => {
-        if (localStorage.getItem('site-theme') === 'light') {
-            document.body.classList.add('light-theme');
-        }
-        const saved = localStorage.getItem('individuals-ratio') || "1.33";
+        if (localStorage.getItem('site-theme') === 'light') document.body.classList.add('light-theme');
+        let saved = localStorage.getItem('individuals-ratio') || "1.33";
+        if (saved !== "1.33" && saved !== "1.5" && saved !== "1.25") saved = "1.33";
         document.getElementById('ratioSelect').value = saved;
         updateRatio(saved);
-        updatePages();
-    };
-</script>
+    };</script>
 </body>
 </html>
