@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CHAPTER 5</title>
+    <style>
+        :root { --bg: #0e0e0e; --page-bg: #151515; --white-raw: 255, 255, 255; --spread-ratio: 1.33; --panel-bg: rgba(20, 20, 20, 0.95); --border-color: #333; --border-light: #222; --input-bg: #000; --text-main: #fff; }
+        body.light-theme { --bg: #e5e5e5; --page-bg: #ffffff; --white-raw: 0, 0, 0; --panel-bg: rgba(255, 255, 255, 0.95); --border-color: #ccc; --border-light: #ddd; --input-bg: #fff; --text-main: #000; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg); margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; color: var(--text-main); }
+        .book-container { width: 95%; max-width: 1400px; margin: 20px 0; }
+        .book-spread { display: grid; grid-template-columns: 1fr 1fr; width: 100%; aspect-ratio: var(--spread-ratio); background: var(--page-bg); border: 1px solid var(--border-light); position: relative; overflow: hidden; }
+        .book-spread::before { content: ""; position: absolute; left: 50%; top: 0; bottom: 0; width: 1px; background: var(--border-light); z-index: 5; }
+        .page { position: relative; display: flex; flex-direction: column; height: 100%; padding: 60px 80px; box-sizing: border-box; overflow: hidden; }
+        @media (max-width: 900px) {
+            .book-container { margin: 10px 0; width: 100%; }
+            .book-spread { grid-template-columns: 1fr; aspect-ratio: auto !important; height: auto; border: none; overflow: visible; }
+            .book-spread::before { display: none; }
+            .page { padding: 40px 25px; height: auto; min-height: 400px; border-bottom: 1px solid var(--border-light); }
+            .settings-panel { left: 0 !important; right: 0 !important; bottom: 0 !important; flex-direction: row !important; justify-content: space-between; width: 100%; border-left: none; border-right: none; padding: 15px 20px !important; box-sizing: border-box; }
+            .footer-nav { margin-bottom: 100px; }
+        }
+        @media (max-width: 900px) and (orientation: landscape) {
+            .book-spread { grid-template-columns: 1fr 1fr; aspect-ratio: var(--spread-ratio) !important; overflow: hidden; }
+            .book-spread::before { display: block; } .page { padding: 30px; }
+        }
+        .content { width: 100%; height: 100%; overflow: hidden; }
+        .content p { font-size: 1.1rem; line-height: 1.7; margin-bottom: 20px; color: rgba(var(--white-raw), 0.8); }
+        .d { display: flex !important; background: rgba(var(--white-raw), 0.05); padding: 12px; border-radius: 4px; margin-bottom: 20px; font-weight: 500; }
+        .d::before { content: ""; min-width: 4px; height: 1.2rem; background: rgba(var(--white-raw), 0.4); margin-right: 12px; }
+        .no-padding { padding: 0 !important; }
+        .no-padding img { width: 100%; height: 100%; display: block; object-fit: cover; }
+        .center-block { display: flex; flex-direction: column; justify-content: center; align-items: center; width: 100%; height: 100%; text-align: center; padding: 20px 0; box-sizing: border-box; }
+        .center-block p { text-align: center; font-style: italic; letter-spacing: 0.03em; color: rgba(var(--white-raw), 0.75); margin-bottom: 14px; font-size: 1.05rem; line-height: 1.8; }
+        .page.center-page { justify-content: center; align-items: center; }
+        .page.center-page .center-block { height: auto; }
+        .settings-panel { position: fixed; bottom: 20px; right: 20px; z-index: 100; background: var(--panel-bg); backdrop-filter: blur(8px); padding: 12px; border: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 8px; font-size: 10px; text-transform: uppercase; letter-spacing: 1px; }
+        select { background: var(--input-bg); color: var(--text-main); border: 1px solid var(--border-color); padding: 8px; cursor: pointer; outline: none; }
+        .nav-zone { position: absolute; top: 0; bottom: 0; width: 40%; z-index: 10; cursor: pointer; }
+        .left-zone { left: 0; } .right-zone { right: 0; }
+        .footer-nav { margin: 20px 0 60px 0; z-index: 10; }
+        .return-btn { text-decoration: none; color: rgba(var(--white-raw), 0.5); font-size: 12px; letter-spacing: 2px; padding: 12px 25px; border: 1px solid var(--border-color); transition: 0.3s; }
+        .return-btn:hover { background: var(--text-main); color: var(--bg); }
+        .spoiler-active img { filter: blur(60px) grayscale(1); transition: 0.3s; }
+        .revealed img { filter: blur(0) grayscale(0) !important; }
+        .spoiler-active:not(.revealed)::after { content: "SPOILER: CLICK TO REVEAL"; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.9); color: white; padding: 12px 20px; font-size: 11px; letter-spacing: 2px; z-index: 20; pointer-events: none; border: 1px solid #555; }
+        #sandbox { position: fixed; visibility: hidden; top: -9999px; left: -9999px; overflow: hidden; }
+    </style>
+</head>
+<body>
+    <div class="settings-panel">
+        <span>SPREAD RATIO:</span>
+        <select id="ratioSelect" onchange="updateRatio(this.value)">
+            <option value="1.33">4:3 (Default)</option>
+            <option value="1.5">3:2</option>
+            <option value="1.25">5:4</option>
+        </select>
+    </div>
+    <div id="sandbox"></div>
+    <div class="book-container">
+        <main class="book-spread" id="spreadElement">
+            <div class="nav-zone left-zone" onclick="prevPage()"></div>
+            <div class="nav-zone right-zone" onclick="nextPage()"></div>
+            <div id="spread-content-area" style="display: contents;"></div>
+        </main>
+    </div>
+    <footer class="footer-nav"><a href="index.html" class="return-btn">RETURN TO MENU</a></footer>
+<script>
+    const PARSED_ELEMENTS = [{"type":"single-img","url":"image\\05\\1.jpg"},{"type":"single-img","url":"image\\05\\2.jpg"},{"type":"center","data":"<div class=\"center-block\"><p><strong>February 1st, 2026</strong></p></div>"},{"type":"text","data":"<p>These ships share the size and layout of a USNS Mercy and a degree of reinforcement that makes the Pacific Egret and Heron ships look like babies.</p>"},{"type":"text","data":"<p>The Government has yet to give these ships an actual name, though the codename \"Corroborate\" is the most widely agreed upon by those on duty.</p>"},{"type":"text","data":"<p>The thing is, they needed something strong.</p>"},{"type":"text","data":"<p>Very strong.</p>"},{"type":"text","data":"<p>Strong enough to endure back-to-back missile launches, heavy artillery, and perhaps nuclear warheads.</p>"},{"type":"text","data":"<p>Though who knew the ship would only be repurposed into carrying these \"humans.\"</p>"},{"type":"text","data":"<p>Me included.</p>"},{"type":"text","data":"<p>They look brutalist from the outside, but the inside is considerably worse.</p>"},{"type":"text","data":"<p>They gave me a room filled with cramped ventilation shafts.</p>"},{"type":"text","data":"<p>There were no mirrors, no peepholes, and the room was completely blocked off from all directions.</p>"},{"type":"text","data":"<p>Imagine a perfect square surrounded by walls with great depth.</p>"},{"type":"text","data":"<p>There were 100 meters of space from the entrance to the back and 100 meters on all sides, leaving no real room to walk around outside this block of room.</p>"},{"type":"text","data":"<p>I assume they used a system of gears, levers, and pistons to automatically pull the walls into each other, opening it when need be.</p>"},{"type":"text","data":"<p>These guys aren’t as bad as it seems, at least to me.</p>"},{"type":"text","data":"<p>They strapped a diagnostic equipment to my left arm. They told me not to remove it which is fine because it’s pretty light.</p>"},{"type":"text","data":"<p>To compensate for the confinement, I suppose, they gave me a bed and a book for entertainment.</p>"},{"type":"text","data":"<p>Not that the book was interesting at all. It was just dense walls of text explaining how we would be living in America once we arrived.</p>"},{"type":"text","data":"<p>It’s not too bad here, actually.</p>"},{"type":"text","data":"<p>Food would just appear by my front door whenever I wake up from sleep.</p>"},{"type":"text","data":"<p>I heard the machinery whir to life outside my prison. It irritates me how the walls scrape against the ground inefficiently.</p>"},{"type":"text","data":"<p>A cute girl in an infirmary robe opened the door for me. She took the equipment off my hand and led me out of the room.</p>"},{"type":"text","data":"<p>I walked together with other people — or ‘corpses’, as they call us.</p>"},{"type":"text","data":"<p>These people were just like me, it seems.</p>"},{"type":"text","data":"<p>Forced away from their homes.</p>"},{"type":"text","data":"<p>I wonder if they're evil people like me.</p>"},{"type":"text","data":"<p>I don't like the fact that no one was smiling.</p>"},{"type":"text","data":"<p>The lighthouses would've blinded us if it were late at night. It's pretty cold here, and I'm not used to this temperature. The fact that it's cloudy isn't helping either.</p>"},{"type":"text","data":"<p>Bright flags of America waved around the borders of the land, and lots of soldiers stood proud around the decks, armed with heavy rifles and such.</p>"},{"type":"text","data":"<p>They guided us to a place that looked like an infirmary, doing medical check-ups on us and even attempting to comfort us.</p>"},{"type":"text","data":"<p>I guess some couldn't handle the stress. I saw a kid puke up alien-like entities that slowly grew to twice the size of the average adult human.</p>"},{"type":"text","data":"<p>I was expecting something catastrophic, though they got gunned down just as easily as the kid did.</p>"},{"type":"text","data":"<p>Why would he even do something like that? How fucking stupid.</p>"},{"type":"text","data":"<p>When everything seemed fine, they gathered us at a huge courtyard. A huge stage platform sat at the centre of it.</p>"},{"type":"text","data":"<p>A general in formal clothing shook his acquaintance's hand, gave him one firm pat on the back, and went up the stage. He tapped the microphone once.</p>"},{"type":"center","data":"<div class=\"center-block\"><p>“We understand that this is not where you wanted to be.”</p><p>“But your own countries submitted you here.“</p><p>“We simply accepted the offer.”</p><p>“You were a risk they were not willing to carry.”</p><p>“So, this is your home now. That is not a negotiable point.”</p><p>“What is negotiable is what you become here.”</p><p>“We intend to make you capable.”</p><p>“Disciplined.”</p><p>“Useful.”</p><p>“For this country, and to the stability of the world beyond it.”</p><p>“That is not a punishment. That is an opportunity.”</p></div>"},{"type":"text","data":"<p>I was more focused on the group of guys my age who weren't exactly called to this gathering. The guards escorting them looked very lively.</p>"},{"type":"text","data":"<p>One of them laughed, patting the dude with the bandaged blindfold on the back over and over.</p>"},{"type":"text","data":"<p>But that last line captured my attention.</p>"},{"type":"text","data":"<p>I don't really care about any of this.</p>"},{"type":"text","data":"<p>But if what he said is true, then maybe...</p>"},{"type":"text","data":"<p>I could be \"human\" once again.</p>"},{"type":"text","data":"<p>A second chance...</p>"},{"type":"text","data":"<p class=\"d\">GENERAL: \"Any questions?\"</p>"},{"type":"text","data":"<p>Standing in the front row, a teenager with a scarf wrapped around his neck raised his hand.</p>"},{"type":"text","data":"<p>Around him, four to five soldiers had their eyes locked onto him. It had been like that since we disembarked the ship. There were also multiple drones hovering over him.</p>"},{"type":"text","data":"<p>He must be dangerous.</p>"},{"type":"text","data":"<p>The general pointed his thumb at the boy.</p>"},{"type":"text","data":"<p class=\"d\">GENERAL: \"What's your name?\"</p>"},{"type":"text","data":"<p>One of the soldiers supervising him nudged him on his back, sending him stumbling slightly forward.</p>"},{"type":"text","data":"<p class=\"d\">VEN: \"It's Ven.\"</p>"},{"type":"text","data":"<p>The general nodded once, signaling him to continue.</p>"},{"type":"text","data":"<p class=\"d\">VEN: \"Right...\"</p>"},{"type":"text","data":"<p class=\"d\">VEN: \"How exactly do you intend on making us useful?\"</p>"},{"type":"text","data":"<p>The man on the mic smiled for a second, going back to his strict, neutral expression just as fast.</p>"},{"type":"text","data":"<p class=\"d\">GENERAL: \"I was about to get to that topic.\"</p>"},{"type":"text","data":"<p class=\"d\">GENERAL: \"Each of you will be assigned a designated government role suited to your profile.\"</p>"},{"type":"text","data":"<p class=\"d\">GENERAL: \"You will receive compensation, housing, and full benefits.\"</p>"},{"type":"text","data":"<p class=\"d\">GENERAL: \"You see, we are not indifferent to your circumstances.\"</p>"},{"type":"text","data":"<p class=\"d\">GENERAL: \"We want you functional, and that requires that you are taken care of.\"</p>"},{"type":"text","data":"<p>After all those exhausting minutes of standing which I'm not used to, we were free to do whatever we wanted around the courtyard, obviously under supervision.</p>"},{"type":"text","data":"<p>I sat on a bench, and one of the polite assistants gave me some raisin bread. It tasted so good that I just had to savour it slowly.</p>"},{"type":"text","data":"<p>The kid next to me didn't like how I was having fun on my own respectable terms, though. Or maybe he was just homesick, who knows.</p>"},{"type":"text","data":"<p>Either way, him looking at me makes me uncomfortable.</p>"},{"type":"text","data":"<p>Soldiers were gathered around him...</p>"},{"type":"text","data":"<p>Huh, this was the same kid from before.</p>"},{"type":"text","data":"<p class=\"d\">VEN: “This place sucks.”</p>"},{"type":"text","data":"<p>One of the soldiers cleared his throat, that's the <em>watch your mouth</em> signal.</p>"},{"type":"text","data":"<p>Ven glanced at the soldier once with an offended expression, then he turned toward me. I braced myself for his salty tantrums.</p>"},{"type":"text","data":"<p class=\"d\">VEN: “Do you have a functional mouth, or are you just going to keep chewing like that?”</p>"},{"type":"text","data":"<p>Ouch.</p>"},{"type":"text","data":"<p>Maybe I should deflect the conversation before he hurts my feelings even more.</p>"},{"type":"text","data":"<p>I swallowed the chunks of bread in my mouth and spoke.</p>"},{"type":"text","data":"<p class=\"d\">MIGUEL: “What's with the soldiers guarding you?”</p>"},{"type":"text","data":"<p class=\"d\">VEN: “...”</p>"},{"type":"text","data":"<p class=\"d\">VEN: “They're just a bunch of busybodies.”</p>"},{"type":"text","data":"<p>He sighed, tossed the plastic wrapping of his chocolate bread down, and started chewing.</p>"},{"type":"text","data":"<p>His supervisor picked up the plastic and handed it over to a maid there, without breaking eye contact with him.</p>"},{"type":"text","data":"<p>This “don't-break-eye-contact” procedure strangely reminded me of a fictional entity.</p>"},{"type":"text","data":"<p class=\"d\">VEN: “This place seriously sucks.”</p>"},{"type":"text","data":"<p>I finished my meal.</p>"},{"type":"text","data":"<p class=\"d\">MIGUEL: “I don't think so.”</p>"},{"type":"text","data":"<p class=\"d\">MIGUEL: “You never know what a change of scenery could bring you.”</p>"},{"type":"text","data":"<p class=\"d\">MIGUEL: “I didn't either.”</p>"},{"type":"text","data":"<p class=\"d\">VEN: “Why do you say that? Don't you miss home?”</p>"},{"type":"text","data":"<p>I sighed.</p>"},{"type":"text","data":"<p class=\"d\">MIGUEL: \"You're still young. You have to learn to be more optimistic.\"</p>"},{"type":"text","data":"<p class=\"d\">MIGUEL: \"Just see this as a chance to start fresh.\"</p>"},{"type":"text","data":"<p>One of the soldiers interrupted.</p>"},{"type":"text","data":"<p>\"Yeah kid, free housing, free salary, free benefits.\"</p>"},{"type":"text","data":"<p>\"Doubt you can get that in your country.\"</p>"},{"type":"text","data":"<p>...That's not really what I meant, but sure.</p>"},{"type":"center","data":"<div class=\"center-block\"><p><strong>June 4th, 2026</strong></p></div>"},{"type":"text","data":"<p>The cuffs felt light for something supposedly \"high-tech.\" I could only hope they had made them like that for me on purpose.</p>"},{"type":"text","data":"<p>They cuffed my legs and arms and expected me to get these papers done in under 10 minutes? Seems like a violation of human rights.</p>"},{"type":"text","data":"<p>Most of it was jargon. Stuff regarding my name, house, a referral, and bank accounts.</p>"},{"type":"text","data":"<p>Isn't this kind of useless given how they know exactly what we are and where we come from?</p>"},{"type":"text","data":"<p>These stupid questions on the forms made all the supervision and training feel wasted.</p>"},{"type":"text","data":"<p>The last page was the only page that made me sit and think. A list of government branches with a small checkbox next to each one.</p>"},{"type":"text","data":"<p>I have to pick one to work for for the rest of my life.</p>"},{"type":"text","data":"<p><em>O.S.I.R.I.S.</em></p>"},{"type":"text","data":"<p>My pen hovered over it for a moment.</p>"},{"type":"text","data":"<p>Oh, right.</p>"},{"type":"text","data":"<p>I should mention that the entire stack of forms was signed with one hand. The other was occupied with the last of my raisin bread, which I was not willing to put down under any circumstances.</p>"},{"type":"text","data":"<p>I had to dip my head low enough that my nose was almost touching the paper just to see what I was signing properly.</p>"},{"type":"text","data":"<p>My supervisor leaned over.</p>"},{"type":"text","data":"<p class=\"d\">SUPERVISOR: “You sure about that one?”</p>"},{"type":"text","data":"<p>I looked up at him, anticipating the elaboration.</p>"},{"type":"text","data":"<p class=\"d\">SUPERVISOR: “It's not fully government. Nobody's stopping you, but it's not exactly a beginner's experience either.”</p>"},{"type":"text","data":"<p class=\"d\">SUPERVISOR: “Their methods are a little... wild compared to standard procedure.”</p>"},{"type":"text","data":"<p class=\"d\">MIGUEL: “Can I punish bad guys if I get in there?”</p>"},{"type":"text","data":"<p>...</p>"},{"type":"text","data":"<p class=\"d\">SUPERVISOR: “You can.”</p>"},{"type":"text","data":"<p class=\"d\">SUPERVISOR: “But you have to know whose head you're taking.”</p>"},{"type":"text","data":"<p class=\"d\">SUPERVISOR: “Get the wrong target and you'll be buried in legal problems you can't contest.”</p>"},{"type":"text","data":"<p>So, it seems I just have to be careful.</p>"},{"type":"text","data":"<p>In that world, careful means something specific. It means if I get the wrong target, I'm dead.</p>"},{"type":"text","data":"<p>That doesn’t seem like a problem to me.</p>"},{"type":"text","data":"<p>The door opened. A heavyset man walked in. He was fat, but well-kept. Evident in how his hair was annoyingly silky and his goatee was trimmed so well it looked like he just taped it on his face.</p>"},{"type":"text","data":"<p>He looked like he spent more time on his appearance than I ever had throughout my lifetime.</p>"},{"type":"text","data":"<p>I wasn't planning on sticking my nose up someone's ass.</p>"},{"type":"text","data":"<p>I ticked the box, proceeded with the signatures, and jotted down my reasoning for joining this branch.</p>"},{"type":"text","data":"<p>Against my will, however, I listened to pieces of their conversation.</p>"},{"type":"text","data":"<p>\"I have no idea man, it's giving me a massive headache.\"</p>"},{"type":"text","data":"<p>\"The latest batch is just—\"</p>"},{"type":"text","data":"<p>\"God <strong>DAAAMNN</strong>...\"</p>"},{"type":"text","data":"<p>He slammed the table for dramatic effect.</p>"},{"type":"text","data":"<p>\"They told me not to worry, but I know damn well they're gonna use that as an excuse to dick down my pay.\"</p>"},{"type":"text","data":"<p>\"The tamed-to-wild ratio is strong, my ass. If anything, the ratio of the ones who broke free is the strong one right now.\"</p>"},{"type":"text","data":"<p>\"If you were there, you'd see how it looked like a dam leak... so fucking horrifying.\"</p>"},{"type":"text","data":"<p>I picked up my forms and slid them gently across the table toward my supervisor. He glanced down, gave me a thumbs up without looking away from his colleague.</p>"},{"type":"text","data":"<p>I stood up and left.</p>"},{"type":"text","data":"<p>Weeks go by and I proved myself useful.</p>"},{"type":"text","data":"<p>They stopped supervising me, took the cuffs off and I stopped thinking about it shortly after.</p>"},{"type":"center","data":"<div class=\"center-block\"><p><strong>June 1st, 2031</strong></p></div>"},{"type":"text","data":"<p>We sat down around the long table in the meeting room, listening to what our beloved Deputy Ven had to say.</p>"},{"type":"text","data":"<p>Hell, if anything, he was the only one willing to get his hands dirty here. Not the chief, not the assistant chief, and not any of the high-ranking members would leave the comfort of their air-conditioned offices to go on an all-out brawl against criminals.</p>"},{"type":"text","data":"<p>I have never been good at listening to people's speeches, not even this one, so sorry Ven.</p>"},{"type":"text","data":"<p>And the others were not contributing much either, so I could see why he was feeling stressed about that.</p>"},{"type":"text","data":"<p>Maybe it was our incompetency, or maybe it was the lack of serious treatment he was receiving.</p>"},{"type":"text","data":"<p>Ah well.</p>"},{"type":"text","data":"<p>It felt like the meeting ended in a breeze, and I got up to leave for lunch.</p>"},{"type":"text","data":"<p class=\"d\">VEN: \"Miguel.\"</p>"},{"type":"text","data":"<p>I turned toward him.</p>"},{"type":"text","data":"<p class=\"d\">MIGUEL: \"Huh?\"</p>"},{"type":"text","data":"<p>He slammed his laptop shut, set the projector back in place, and looked at me in a frazzled manner.</p>"},{"type":"text","data":"<p class=\"d\">MIGUEL: “Oh.”</p>"},{"type":"text","data":"<p class=\"d\">MIGUEL: “If you want me to summarize our meeting just now, it's about how impossible it is to track down these kingpins.”</p>"},{"type":"text","data":"<p class=\"d\">MIGUEL: “So we need more manpow—”</p>"},{"type":"text","data":"<p class=\"d\">VEN: “Does it ever occur to you that none of this is actually working?”</p>"},{"type":"text","data":"<p class=\"d\">VEN: “I’m not being dramatic. Look at the numbers.”</p>"},{"type":"text","data":"<p>My eyes instinctively caught the statistics printed on a sheet of A4 paper sitting on the edge of the table.</p>"},{"type":"text","data":"<p class=\"d\">VEN: “Your kill count is genuinely impressive, and it has barely moved the needle.”</p>"},{"type":"text","data":"<p>He was not wrong, my kill count was quite high.</p>"},{"type":"text","data":"<p class=\"d\">VEN: “At some point you have to ask yourself what you're actually doing this for.”</p>"},{"type":"text","data":"<p class=\"d\">VEN: “I'm just saying. There's no shame in easing up. We're not even in a hurry.”</p>"},{"type":"text","data":"<p class=\"d\">MIGUEL: “No.”</p>"},{"type":"text","data":"<p>...</p>"},{"type":"text","data":"<p>No sane answer would satisfy him, I knew.</p>"},{"type":"text","data":"<p>If I kept saying 'we cannot be lazy' or 'we want to keep this country peaceful', I would just sound insensitive, like always.</p>"},{"type":"text","data":"<p>Perhaps I should just tell him.</p>"},{"type":"text","data":"<p class=\"d\">MIGUEL: “When I was young, I killed my sibling.”</p>"},{"type":"text","data":"<p class=\"d\">MIGUEL: “They were better than me at everything.”</p>"},{"type":"text","data":"<p class=\"d\">MIGUEL: “By nature, the golden child was loved and cherished, relishing everything I had ever wanted.”</p>"},{"type":"text","data":"<p class=\"d\">MIGUEL: “I couldn't stand it.”</p>"},{"type":"text","data":"<p class=\"d\">MIGUEL: “I was old enough to know what I was doing.”</p>"},{"type":"text","data":"<p class=\"d\">MIGUEL: “When I got older I realized that's not the kind of thing you carry to your grave without at least trying to balance it out.”</p>"},{"type":"text","data":"<p class=\"d\">MIGUEL: “I don’t think a mere life for a life would fix it.”</p>"},{"type":"text","data":"<p class=\"d\">MIGUEL: “After all, that makes it too easy. That would be too good to be true.”</p>"},{"type":"text","data":"<p>Ven seemed taken aback by what I said, that’s fair.</p>"},{"type":"text","data":"<p>He made the kind of face someone makes when you tell them your parents just died. Sympathy, right, that's what it was.</p>"},{"type":"text","data":"<p class=\"d\">MIGUEL: \"I'll be on my way.\"</p>"},{"type":"text","data":"<p>I twisted the doorknob, and the door swung open.</p>"},{"type":"text","data":"<p>He called to me, stopping me dead in my tracks.</p>"},{"type":"text","data":"<p class=\"d\">VEN: \"Say...\"</p>"},{"type":"text","data":"<p class=\"d\">VEN: \"When we got here, you told me to start anew.\"</p>"},{"type":"text","data":"<p class=\"d\">VEN: \"So I did. I pursued my education, I climbed through the ranks, and I got a five-digit salary.\"</p>"},{"type":"text","data":"<p class=\"d\">VEN: \"So... why am I still unsatisfied?\"</p>"},{"type":"text","data":"<p>I stood there for a moment, thinking that looking at him would not be the right move. That would be awkward.</p>"},{"type":"text","data":"<p>I wondered.</p>"},{"type":"text","data":"<p><em>Why?</em></p>"},{"type":"text","data":"<p>To be honest, I felt that way too.</p>"},{"type":"text","data":"<p>No matter how many crimes I've ended, it always feels like I'm not doing the right thing.</p>"},{"type":"text","data":"<p class=\"d\">MIGUEL: \"Beats me.\"</p>"},{"type":"text","data":"<p>I left the room.</p>"}];
+    let PAGINATED_PAGES = [];
+    let currentSpread = 0;
+
+    function reflowContent() {
+        if (PARSED_ELEMENTS.length === 0) return;
+
+        if (window.innerWidth <= 900 && window.innerHeight > window.innerWidth) {
+            PAGINATED_PAGES = [];
+            let blockBuffer = "";
+            PARSED_ELEMENTS.forEach(el => {
+                if (el.type === 'paired-double') {
+                    if (blockBuffer !== "") { PAGINATED_PAGES.push({ type: 'text', data: blockBuffer }); blockBuffer = ""; }
+                    PAGINATED_PAGES.push({ type: 'single', data: '<img src="' + el.left + '">' });
+                    PAGINATED_PAGES.push({ type: 'single', data: '<img src="' + el.right + '">' });
+                } else if (el.type === 'single-img') {
+                    if (blockBuffer !== "") { PAGINATED_PAGES.push({ type: 'text', data: blockBuffer }); blockBuffer = ""; }
+                    PAGINATED_PAGES.push({ type: 'single', data: '<img src="' + el.url + '">' });
+                } else if (el.type === 'center') {
+                    if (blockBuffer !== "") { PAGINATED_PAGES.push({ type: 'text', data: blockBuffer }); blockBuffer = ""; }
+                    PAGINATED_PAGES.push({ type: 'center', data: el.data });
+                } else {
+                    blockBuffer += el.data || el;
+                }
+            });
+            if (blockBuffer !== "") PAGINATED_PAGES.push({ type: 'text', data: blockBuffer });
+            currentSpread = 0;
+            updateUI();
+            return;
+        }
+
+        const bookSpread = document.querySelector('.book-spread');
+        const spreadWidth = bookSpread.clientWidth;
+        if (!spreadWidth || spreadWidth === 0) { requestAnimationFrame(() => reflowContent()); return; }
+
+        const ratio = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--spread-ratio')) || 1.33;
+        const spreadHeight = spreadWidth / ratio;
+        const targetWidth = (spreadWidth / 2) - 1;
+        const pageHeight = spreadHeight - 2;
+
+        const sandbox = document.getElementById('sandbox');
+        sandbox.innerHTML = '<article class="page" style="width:' + targetWidth + 'px; height:' + pageHeight + 'px; padding:60px 80px; box-sizing:border-box; overflow:hidden;"><div class="content" id="sand-c" style="width:100%; height:100%; overflow:hidden;"></div></article>';
+        const sandC = document.getElementById('sand-c');
+        const maxHeight = sandC.offsetHeight;
+
+        if (!maxHeight || maxHeight === 0) {
+            sandbox.innerHTML = "";
+            requestAnimationFrame(() => reflowContent());
+            return;
+        }
+
+        PAGINATED_PAGES = [];
+        let currentPageBuffer = "";
+
+        function flushTextBuffer() {
+            if (currentPageBuffer !== "") {
+                PAGINATED_PAGES.push({ type: 'text', data: currentPageBuffer });
+                currentPageBuffer = "";
+            }
+        }
+
+        PARSED_ELEMENTS.forEach(element => {
+            if (element.type === 'paired-double') {
+                flushTextBuffer();
+                if (PAGINATED_PAGES.length % 2 !== 0) PAGINATED_PAGES.push({ type: 'empty', data: "" });
+                PAGINATED_PAGES.push({ type: 'single', data: '<img src="' + element.left + '">' });
+                PAGINATED_PAGES.push({ type: 'single', data: '<img src="' + element.right + '">' });
+                return;
+            }
+            if (element.type === 'single-img') {
+                flushTextBuffer();
+                PAGINATED_PAGES.push({ type: 'single', data: '<img src="' + element.url + '">' });
+                return;
+            }
+            if (element.type === 'center') {
+                flushTextBuffer();
+                PAGINATED_PAGES.push({ type: 'center', data: element.data });
+                return;
+            }
+            let inlineMarkup = element.data;
+            sandC.innerHTML = currentPageBuffer + inlineMarkup;
+            if (sandC.scrollHeight > maxHeight && currentPageBuffer !== "") {
+                PAGINATED_PAGES.push({ type: 'text', data: currentPageBuffer });
+                currentPageBuffer = inlineMarkup;
+            } else {
+                currentPageBuffer += inlineMarkup;
+            }
+        });
+
+        flushTextBuffer();
+        sandbox.innerHTML = "";
+        currentSpread = 0;
+        updateUI();
+    }
+
+    function renderPage(pageData, id) {
+        if (!pageData) return '<article class="page" id="' + id + '"></article>';
+        if (pageData.type === 'single') return '<article class="page no-padding" id="' + id + '">' + pageData.data + '</article>';
+        if (pageData.type === 'center') return '<article class="page center-page" id="' + id + '"><div class="content">' + pageData.data + '</div></article>';
+        if (pageData.type === 'text') return '<article class="page" id="' + id + '"><div class="content">' + pageData.data + '</div></article>';
+        return '<article class="page" id="' + id + '"></article>';
+    }
+
+    function updateUI() {
+        const container = document.getElementById('spread-content-area');
+        container.innerHTML = "";
+        if (PAGINATED_PAGES.length === 0) return;
+        const isMobileView = window.innerWidth <= 900 && window.innerHeight > window.innerWidth;
+        const bookSpreadElement = document.getElementById('spreadElement');
+        if (isMobileView) {
+            bookSpreadElement.style.display = "block"; bookSpreadElement.style.border = "none";
+            const currentItem = PAGINATED_PAGES[currentSpread]; if (!currentItem) return;
+            if (currentItem.type === 'single') { container.innerHTML = '<article class="page no-padding">' + currentItem.data + '</article>'; }
+            else if (currentItem.type === 'center') { container.innerHTML = '<article class="page center-page"><div class="content">' + currentItem.data + '</div></article>'; }
+            else { container.innerHTML = '<article class="page"><div class="content">' + currentItem.data + '</div></article>'; }
+            handleSpoilerState(container); return;
+        }
+        bookSpreadElement.style.display = "grid"; bookSpreadElement.style.border = "1px solid var(--border-light)";
+        const leftIndex = currentSpread * 2; const rightIndex = leftIndex + 1;
+        const leftPageData = PAGINATED_PAGES[leftIndex]; const rightPageData = PAGINATED_PAGES[rightIndex];
+        let leftHtml = renderPage(leftPageData, 'L-PAGE');
+        let rightHtml = rightPageData ? renderPage(rightPageData, 'R-PAGE') : '<article class="page" id="R-PAGE" style="display:none;"></article>';
+        container.innerHTML = leftHtml + rightHtml;
+        handleSpoilerState(container);
+    }
+
+    function handleSpoilerState(container) {
+        const isSpoilerOn = localStorage.getItem('spoiler-mode') === 'true';
+        const pages = container.querySelectorAll('.page');
+        pages.forEach(page => {
+            if (isSpoilerOn && page.classList.contains('no-padding')) {
+                page.classList.add('spoiler-active');
+                page.onclick = (e) => { if (page.classList.contains('spoiler-active') && !page.classList.contains('revealed')) { e.stopPropagation(); page.classList.add('revealed'); } };
+            }
+        });
+    }
+
+    function nextPage() {
+        const isMobileView = window.innerWidth <= 900 && window.innerHeight > window.innerWidth;
+        const activeSpoiler = document.querySelector('.spoiler-active:not(.revealed)');
+        if (activeSpoiler) { activeSpoiler.classList.add('revealed'); return; }
+        if (isMobileView) { if (currentSpread + 1 < PAGINATED_PAGES.length) { currentSpread++; updateUI(); window.scrollTo({ top: 0 }); } }
+        else { if ((currentSpread + 1) * 2 < PAGINATED_PAGES.length) { currentSpread++; updateUI(); window.scrollTo({ top: 0 }); } }
+    }
+
+    function prevPage() { if (currentSpread > 0) { currentSpread--; updateUI(); window.scrollTo({ top: 0 }); } }
+
+    function updateRatio(val) {
+        if (val !== "1.33" && val !== "1.5" && val !== "1.25") val = "1.33";
+        document.documentElement.style.setProperty('--spread-ratio', val);
+        document.body.setAttribute('data-ratio', val);
+        localStorage.setItem('individuals-ratio', val);
+        setTimeout(() => reflowContent(), 100);
+    }
+
+    window.addEventListener('resize', () => setTimeout(() => reflowContent(), 100));
+
+    window.onload = () => {
+        if (localStorage.getItem('site-theme') === 'light') document.body.classList.add('light-theme');
+        let saved = localStorage.getItem('individuals-ratio') || "1.33";
+        if (saved !== "1.33" && saved !== "1.5" && saved !== "1.25") saved = "1.33";
+        document.getElementById('ratioSelect').value = saved;
+        updateRatio(saved);
+    };</script>
+</body>
+</html>
